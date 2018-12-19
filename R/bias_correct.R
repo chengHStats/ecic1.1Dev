@@ -29,7 +29,7 @@ BiasCorrect <- function(n, true, param, models, N = 1000, ic = 'AIC'){
     if(p == 1){
       param.boot <- params.boot %>% mean
     } else{
-      param.boot <- params.boot%>% colMeans
+      param.boot <- params.boot%>% rowMeans
     }
     param.corrected = 2*param-param.boot
     return(list(parameters = param.corrected, data = newdata))
