@@ -1,83 +1,53 @@
-# loglik -----------------------------------------------------------------------
+# logLik -----------------------------------------------------------------------
 #' Computes log-likelihood for data and a specified model.
 #'
-#' @param data: A data sample compatible witih the model.
-#' @param model: A string containing the model name.
-#' @param ic: String giving  information criterion to use (e.g. 'AICc', 'BIC')
+#' @param model: An ecicModel object.
+#' @param data: A data sample compatible with the model.
+#'
 #'
 #' @return: A list containing the following:.
 #'
 #' @examples
 #'
 #' @export
-loglik <-  function(data, model, compress = F){
-  # Computes the log-likelihood for a dataset and a model.
-  #
-  # Args:
-  #   data: A vector/matrix data sample compatible with the specified model.
-  #   model: A string specifying the model to compute the log-likehood for.
-  #   compress: A boolean specifying if output should be of list or vector type
-  #
-  # Returns:
-  #   loglik: The log-likelihood for the given data sample
-  #   param: The fitted model parameters, which are an intermediate step.
-  do.call(paste("loglik.", model, sep = ""),
-          list(data = data, model = model))
+logLik.ecicModel = function(model, data, compress = F){
+  NextMethod()
 }
-
 #' @export
-loglik.norm <- function(data, model, compress = F ){
-  # Computes the log-likelihood for a dataset and a norm(mu, sd) model.
-  #
-  # Args:
-  #   data: A vector/matrix data sample compatible with the specified model.
-  #   model: A string specifying the model to compute the log-likehood for.
-  #   compress: A boolean specifying if output should be of list or vector type
-  #
-  # Returns:
-  #   loglik: The log-likelihood for the given data sample
-  #   param: The fitted model parameters, which are an intermediate step.
-  param <- EstimateParameters.norm(data, model)
+logLik.character = function(model, data, compress = F){
+  model1 = tryCatch(ecicModel(model),
+                    error = function(e){
+                      stop(paste(model, "is not a valid ecicModel type."),
+                           call. = FALSE)
+                    })
+  logLik(model1, data)
+}
+#' @export
+logLik.norm <- function(model, data, compress = F ){
+  param <- suppressMessages(EstimateParameters.norm(model, data)$parameters)
   logl <- sum(log(dnorm(data, param[1], param[2])))
   out <- c(logl, param) %>% setNames(c("log.likelihood", rep("est.parameters", 2)))
   return(out)
 }
-
 #' @export
-loglik.norm1 <- function(data, model, compress = F){
-  # Computes the log-likelihood for a dataset and a norm(mu, 1) model.
-  #
-  # Args:
-  #   data: A vector/matrix data sample compatible with the specified model.
-  #   model: A string specifying the model to compute the log-likehood for.
-  #   compress: A boolean specifying if output should be of list or vector type
-  #
-  # Returns:
-  #   loglik: The log-likelihood for the given data sample.
-  #   param: The fitted model parameters, which are an intermediate step.
-  param <- EstimateParameters.norm1(data, model)
-  logl <- sum(log(dnorm(data, param[1],1)))
-  out <- c(logl, param) %>% setNames(c("log.likelihood", "est.parameters"))
+logLik.rwalk <- function(model, data, compress = F ){
+  ep <- suppressMessages(EstimateParameters.rwalk(model, data))
+  param <- ep$parameters
+  steps <- ep$steps
+  logl <- sum(log(dnorm(steps, param[1], param[2])))
+  out <- c(logl, param) %>% setNames(c("log.likelihood", rep("est.parameters", 2)))
   return(out)
 }
-
 #' @export
-loglik.norm0 <- function(data, model, compress = F){
-  # Computes the log-likelihood for a dataset and a norm(0, 1) model.
-  #
-  # Args:
-  #  data: A vector/matrix data sample compatible with the specified model.
-  #  model: A string specifying the model to compute the log-likehood for
-  #  compress: boolean specifying if output should be of list or vector type
-  #
-  # Returns:
-  #   The log-likelihood for the given data sample
-  logl <- sum(log(dnorm(data, 0,1)))
-  return(logl)
+logLik.lmECIC <- function(model, data, compress = F){
+  ep <- EstimateParameters(model, data)
+  parameters <- ep$parameters
+  resid <- ep$resid
+  logl <- sum(log(dnorm(resid, 0, parameters['sd'])))
+  out <- c(logl, parameters) %>% setNames(c("log.likelihood", names(parameters)))
+  return(out)
 }
-
-
-# loliks ----------------------------------------------------------------------
+# logLikMulti ----------------------------------------------------------------------
 #' Computes log-likelihood for many data samples and specified model.
 #'
 #' @param data: A matrix of data samples compatible with the model.
@@ -88,10 +58,10 @@ loglik.norm0 <- function(data, model, compress = F){
 #'
 #' @examples
 #' data = GenerateDataMulti(25, "norm", c(0.3, 1.2), 100)
-#' logliks(data, "norm")
+#' logLikMulti(data, "norm")
 #'
 #' @export
-logliks <- function(data, model, compress = F){
+logLikMulti <- function(model, data, compress = F){
   # Computes the log-likelihood for many datasets and a model.
   #
   # Args:
@@ -100,14 +70,16 @@ logliks <- function(data, model, compress = F){
   #   compress: A boolean specifying if output should be of list or vector type.
   #
   # Returns:
-  #   loglik: The log-likelihood for the given data samples.
+  #   logLik: The log-likelihood for the given data samples.
   #   param: The fitted model parameters, which are an intermediate step.
-  do.call(paste("logliks.", model, sep = ""),
-          list(data = data, model = model))
+  UseMethod("logLikMulti", model)
 }
-
 #' @export
-logliks.norm <- function(data, model, compress = F){
+logLikMulti.ecicModel <- function(model, data, compress = F){
+  NextMethod()
+}
+#' @export
+logLikMulti.norm <- function(model, data, compress = F){
   # Computes the log-likelihood for many datasets and a norm(mu, sd) model.
   #
   # Args:
@@ -116,43 +88,22 @@ logliks.norm <- function(data, model, compress = F){
   #   compress: A boolean specifying if output should be of list or vector type
   #
   # Returns:
-  #   loglik: The log-likelihood for the given data samples.
+  #   logLik: The log-likelihood for the given data samples.
   #   param: The fitted model parameters, which are an intermediate step.
+  params <- suppressMessages( EstimateParametersMulti(model, data, T)$parameters )
   n <- nrow(data)
   N <- ncol(data)
   k = 2
-  params <- EstimateParametersMulti(data, "norm", T)
   liks <- crossprod(rep(1, n),
                     log(dnorm(data,
                               rep(params[1:N], each = n),
                               rep(params[(N+1):(2*N)], each = n))))
   out <- matrix(c(liks, params) , ncol = 1+k )
-  'colnames<-'(out, c("log.likelihood", rep("parameter", k)))
+  'colnames<-'(out, c("log.likelihood", model$parameter.names))
 }
-
 #' @export
-logliks.norm1 <- function(data, model, compress = F){
-  # Computes the log-likelihoods for many datasets and a norm(mu, 1) model.
-  #
-  # Args:
-  #   data: A matrix/array of data samples compatible with the specified model.
-  #   model: A string specifying the model to compute the log-likelihoods for.
-  #   compress: A boolean specifying if output should be of list or vector type.
-  #
-  # Returns:
-  #   loglik: The log-likelihood for the given data samples.
-  #   param: The fitted model parameters, which are an intermediate step.
-  n <- nrow(data)
-  N <- ncol(data)
-  params <- EstimateParametersMulti(data, "norm1")
-  liks <- crossprod(rep(1, n), log(dnorm(data, rep(params[1,], each = n), 1)))
-  out <- matrix(c(liks, c(t(params))),ncol = 2)
-  'colnames<-'(out, c("log.likelihood", "parameter"))
-}
-
-
-logliks.norm0 <- function(data, model, compress = F){
-  # Computes the log-likelihood for many datasets and a norm(0, 1) model.
+logLikMulti.rwalk <- function(model, data, compress = F){
+  # Computes the log-likelihood for many datasets and a norm(mu, sd) model.
   #
   # Args:
   #   data: A matrix/array of data samples compatible with the specified model.
@@ -160,12 +111,30 @@ logliks.norm0 <- function(data, model, compress = F){
   #   compress: A boolean specifying if output should be of list or vector type
   #
   # Returns:
-  #   The log-likelihood for the given data samples.
+  #   logLik: The log-likelihood for the given data samples.
+  #   param: The fitted model parameters, which are an intermediate step.
+  ep <- suppressMessages(EstimateParametersMulti(model, data, T))
+  params <- ep$parameters
+  steps <- ep$steps
   n <- nrow(data)
   N <- ncol(data)
-  params <- EstimateParametersMulti(data, "norm")
-  liks <- crossprod(rep(1, n), log(dnorm(data, 0, 1))) %>% t
-  'colnames<-'(liks, "log.likelihood")
+  k = 2
+  liks <- crossprod(rep(1, n),
+                    log(dnorm(steps,
+                              rep(params[1:N], each = n),
+                              rep(params[(N+1):(2*N)], each = n))))
+  out <- matrix(c(liks, params) , ncol = 1+k )
+  'colnames<-'(out, c("log.likelihood", model$parameter.names))
 }
-
+#' @export
+logLikMulti.lmECIC = function(model, data, compress = F){
+  ep <- EstimateParametersMulti(model, data)
+  parameters <- ep$parameters
+  k = nrow(parameters)
+  resid <- ep$resid
+  N = ncol(resid)
+  logl <- sapply(1:N, function(x) sum(log(dnorm(resid[,x], 0, parameters['sd',x]))))
+  out <- matrix(c(logl, parameters) , ncol = 1+k )
+  'colnames<-'(out, c("log.likelihood", model$parameter.names))
+}
 

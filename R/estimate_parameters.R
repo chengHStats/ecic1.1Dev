@@ -1,6 +1,7 @@
 
 # Estimate parameters for a single sample --------------------------------------
 
+
 # EstimateParameters -----------------------------------------------------------
 #' Computes the fitted parameters for a data sample and a model.
 #'
@@ -14,62 +15,82 @@
 #' models = c("norm0", "norm1", "norm")
 #' EstimateParameters(data)
 #' @export
-EstimateParameters <- function(data, model){
-  do.call(paste("EstimateParameters.", model, sep = ""),
-          list(data = data, model = model))
+EstimateParameters <- function(model, data){
+  UseMethod("EstimateParameters", model)
+  # do.call(paste("EstimateParameters.", model, sep = ""),
+  #         list(data = model, data = model))
 }
+#' @export
+EstimateParameters.character <- function(model, data){
+ model2 = tryCatch(ecicModel(model),
+                   error = function(e){
+                     stop(paste(model, "is not a valid ecicModel type."), call. = FALSE)
+                   })
+ EstimateParameters(model2, data)
+}
+#' @export
+EstimateParameters.ecicModel <- function(model, data){
 
+  # Check that the data is appropriate to the model.
+  if (model$data.type == 1){
+    assert_that(is.numeric(data),
+                (is.vector(data) | (is.matrix(data) && ncol(data) == 1 ) ))
+  }
+  NextMethod("EstimateParameters", model)
+}
 # EstimateParameters.norm ------------------------------------------------------
 #' @export
-EstimateParameters.norm <- function(data, model){
+EstimateParameters.norm <- function(model, data){
   # Computes the fitted parameters for a data sample and a norm(mu, sd) model.
-
   n <- length(data)
-  mu <- sum(data)/n
-  sd <- (crossprod(data-mu)/n)**.5
-  return(c(mu, sd))
-}
-
-# EstimateParameters.norm0 -----------------------------------------------------------
-
-#' @export
-EstimateParameters.norm0 <- function(data, model){
-  # Returns empty for norm(0,1) model.
-
-  return()
-}
-
-# EstimateParameters.norm1 -----------------------------------------------------------
-#' @export
-EstimateParameters.norm1 <- function(data, model){
-  # Computes the fitted parameters for a data sample and a norm(mu, 1) model.
-
-  n <- length(data)
-  mu <- sum(data)/n
-  return(mu)
+    if(is.null(model$fixed.parameters$mean)){
+    mean <- sum(data)/n
+  } else{
+    mean <- model$fixed.parameters$mean
+  }
+  if(is.null(model$fixed.parameters$sd)){
+    sd <- (crossprod(data-mean)/n)**.5
+  } else{
+    sd <- model$fixed.parameters$sd
+  }
+  return(list(parameters = setNames(c(mean, sd), c("mean", "sd"))))
 }
 
 # EstimateParameters.rwalk -----------------------------------------------------------
 #' @export
-EstimateParameters.rwalk <- function(data, model){
+EstimateParameters.rwalk <- function(model, data){
   # Computes fitted parameters for a data sample and random walk (mu, sd) model.
-
-  n <- length(data)
-  steps <- c(data[1], diff(data))
-  EstimateParameters.norm(steps, "norm")
-  mu <- sum(steps)/n
-  sd <- (crossprod(steps-mu)/n)**.5
-  return(c(mu, sd))
+  if(length(model$fixed.parameters) < 2){
+    n <- length(data)
+    steps <- c(data[1], diff(data))
+    if(is.null(model$fixed.parameters$step.mean)){
+      step.mean <- sum(steps)/n
+    }
+    if(is.null(model$fixed.parameters$step.sd)){
+      step.sd <- (crossprod(steps-step.mean)/n)**.5
+    }
+  } else {
+    step.mean = model$fixed.parameters$step.mean
+    step.sd = model$fixed.parameters$step.sd
+  }
+  return(list(parameters = setNames(c(step.mean, step.sd),
+                                    c("step.mean", "step.sd")),
+              steps = steps))
 }
-
-# EstimateParameters.rwalk0 -----------------------------------------------------------
 #' @export
-EstimateParameters.rwalk0 <- function(data, model){
-  # Computes fitted parameters for a data sample and random walk (0, sd) model.
-
-  n <- length(data)
-  steps <-c(data[1], diff(data))
-  (crossprod(steps)/n)^.5
+EstimateParameters.lmECIC = function(model, data){
+  if(length(data) != model$n){
+    stop(paste("Data is not correct length for ", model$ID,
+               ", expecting length ", n, ", but input is length ",
+               length(data), ".", sep = ""))
+  }
+  coef = crossprod(model$model.matrix) %>% solve %>%
+    crossprod(crossprod(model$model.matrix,data))
+  fit = model$model.matrix %*% coef
+  resid = data - fit
+  sd = sd(resid)
+  out = c(coef, sd) %>% setNames(model$parameter.names)
+  return(list(parameters = out, resid = resid))
 }
 
 # EstimateParametersMulti -------------------------------------
@@ -86,7 +107,7 @@ EstimateParameters.rwalk0 <- function(data, model){
 #' EstimateParameters(data)
 #'
 #' @export
-EstimateParametersMulti <- function(data, model, flat = F){
+EstimateParametersMulti <- function(model, data, flat = F){
   # Computes the fitted parameters for multiple data samples and a model.
   #
   # Args:
@@ -95,42 +116,92 @@ EstimateParametersMulti <- function(data, model, flat = F){
   #
   # Returns:
   #   A vector/matrix of the fitted parameters.
-  fnc <- paste("EstimateParametersMulti.", model, sep = "")
-  args <- list(data = data, model = model, flat = flat)
-  do.call(fnc, args)
+  UseMethod("EstimateParametersMulti", model)
 }
-
 #' @export
-EstimateParametersMulti.norm <- function(data, model, flat = F, ...){
-  # Computes fitted parameters for multiple data samples and norm(mu, sd) model.
-
-  n <- nrow(data)
-  N <- ncol(data)
-  mus <- crossprod(rep(1/n, n), data)
-  r <-crossprod(data - matrix(rep(mus, each = n), ncol = N))
-  sds <- {diag(r)/n}**.5
-  out = if (flat) {
-    c(mus,sds)
-  } else {
-    matrix(c(mus, sds), nrow = 2, byrow = TRUE)
+EstimateParametersMulti.character <- function(model, data){
+  model2 = tryCatch(ecicModel(model),
+                    error = function(e){
+                      stop(paste(model, "is not a valid ecicModel type."), call. = FALSE)
+                    })
+  EstimateParametersMulti(model2, data)
+}
+EstimateParametersMulti.ecicModel <- function(model, data, flat = F){
+  if (model$data.type == 1){
+    assert_that(is.numeric(data), is.matrix(data))
   }
-  return(out)
+  NextMethod()
 }
-
 #' @export
-EstimateParametersMulti.norm1 <- function(data, model, ...){
+EstimateParametersMulti.norm <- function(model, data, flat = F, ...){
   # Computes fitted parameters for multiple data samples and norm(mu, sd) model.
 
   n <- nrow(data)
   N <- ncol(data)
-  mus <- crossprod(rep(1/n, n), data)
-  mus
+  if(is.null(model$fixed.parameters$mean)){
+    means <- crossprod(rep(1/n, n), data)
+  } else {
+    means = rep(model$fixed.parameters$mean, N)
+  }
+  if(is.null(model$fixed.parameters$sd)){
+  r <-crossprod(data - matrix(rep(means, each = n), ncol = N))
+  sds <- {diag(r)/n}**.5
+  } else {
+    sds = rep(model$fixed.parameters$sd, N)
+  }
+  out = if (flat) {
+    c(means,sds)
+  } else {
+    matrix(c(means, sds), nrow = 2, byrow = TRUE, dimnames = list(c("mean", "sd"), NULL))
+  }
+  return(list(parameters = out))
 }
-
 #' @export
-EstimateParametersMulti.norm0 <- function(data, model, ...){
+EstimateParametersMulti.rwalk <- function(model, data, flat = F, ...){
   # Computes fitted parameters for multiple data samples and norm(mu, sd) model.
 
-  return()
+
+  if(is.null(model$fixed.parameters$step.mean) |
+     is.null(model$fixed.parameters$step.sd)){
+    steps = rbind(data[1,], diff(data))
+  }
+  if(is.null(model$fixed.parameters$step.mean)){
+    step.means <- crossprod(rep(1/n, n), steps)
+  } else {
+    step.means = rep(model$fixed.parameters$step.mean, N)
+  }
+  if(is.null(model$fixed.parameters$step.sd)){
+    r <-crossprod(steps - matrix(rep(step.means, each = n), ncol = N))
+    step.sds <- {diag(r)/n}**.5
+  } else {
+    step.sds = rep(model$fixed.parameters$step.sd, N)
+  }
+  out = if (flat) {
+    c(step.means,step.sds)
+  } else {
+    matrix(c(step.means, step.sds), nrow = 2, byrow = TRUE,
+           dimnames = list(c("step.mean", "step.sd"), NULL))
+  }
+  return(parameters = out, steps = steps)
 }
+#' @export
+EstimateParametersMulti.lmECIC = function(model, data){
+  n <- nrow(data)
+  N <- ncol(data)
+  if(n != model$n){
+    stop(paste("Data is not correct length for ", model$ID,
+               ", expecting length ", model$n, ", but input is length ",
+               n, ".", sep = ""))
+  }
+  x = as.matrix(model$model.matrix[,-1])
+  m = crossprod(model$model.matrix) %>% solve
+  coefs = apply(data, 2, function(x) crossprod(m, crossprod(model$model.matrix,x)))
+  fit = model$model.matrix %*% coefs
+  resid = data-fit
+  sds = apply(resid,2,sd)
+  out = rbind(coefs, sds)
+  rownames(out) = model$parameter.names
+  return(list(parameters = out, residuals = resid))
+}
+
 

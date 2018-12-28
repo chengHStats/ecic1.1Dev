@@ -4,7 +4,7 @@
 \alias{EstimateParameters}
 \title{Computes the fitted parameters for a data sample and a model.}
 \usage{
-EstimateParameters(data, model)
+EstimateParameters(model, data)
 }
 \arguments{
 \item{data:}{compatible with the specified model.}

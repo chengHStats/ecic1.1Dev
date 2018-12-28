@@ -11,7 +11,7 @@
 #'
 #'
 #' @export
-IC <- function(data, model, ic = 'AIC', compress = F){
+IC <- function(model, data, ic = 'AIC', compress = F){
   # Computes the given information criterion for a single dataset and model.
   #
   # Args:
@@ -25,15 +25,27 @@ IC <- function(data, model, ic = 'AIC', compress = F){
   #   param: the fitted model parameters, which are an intermediate step
   #
   # Error handling
-
-   do.call(paste("IC.",ic,sep = ""),list(data = data, model = model,ic = ic))
+  class(ic) = ic
+  if (is.character(model)){
+    model1 = tryCatch(ecicModel(model),
+                      error = function(e){
+                        stop(paste(model, "is not a valid ecicModel type."),
+                             call. = FALSE)
+                      })
+    IC(model1, data, ic, compress)
+  } else if (class(model)[1] == "ecicModel"){
+  UseMethod("IC", ic)
+  } else {
+    stop("Unexpected input for model in IC function.", call. = FALSE)
+  }
 }
 
 #' @export
-IC.AIC <- function(data, model, ic = 'AIC', compress = F){
-  logl <- loglik(data, model)
-  out = c(-2*logl[1] + 2*length(logl[-1]), logl[-1])
-  names(out) = NULL
+IC.AIC <- function(model, data, ic = 'AIC', compress = F){
+  logl <- logLik(model, data)
+  k = model$k
+  out = c(-2*logl[1] + 2*k, logl[-1])
+  names(out) = c('AIC', model$parameter.names)
   out
 }
 
@@ -50,14 +62,24 @@ IC.AIC <- function(data, model, ic = 'AIC', compress = F){
 #'
 #'
 #' @export
-ICMulti <- function(data, model, ic = "AIC"){
-  fnc <- paste("ICMulti.", ic, sep = "")
-  args <- list(data = data, model = model, ic = ic)
-  do.call(fnc, args)
+ICMulti <- function(model, data, ic = "AIC"){
+  class(ic) = ic
+  if (is.character(model)){
+      model1 = tryCatch(ecicModel(model),
+                        error = function(e){
+                          stop(paste(model, "is not a valid ecicModel type."),
+                               call. = FALSE)
+                        })
+      ICMulti(model1, data, ic)
+    } else if (class(model)[1] == "ecicModel"){
+      UseMethod("ICMulti", ic)
+    } else {
+      stop("Unexpected input for model in ICMulti function.", call. = FALSE)
+    }
 }
 
 #' @export
-ICMulti.AIC <- function(data, model, ic){
+ICMulti.AIC <- function(model, data, ic){
   # Computes the Akaike information criterion for many datasets and a model.
   #
   # Args:
@@ -69,11 +91,10 @@ ICMulti.AIC <- function(data, model, ic){
   # Returns:
   #   ic: the criterion value for the given data samples
   #   param: the fitted model parameters, which are an intermediate step
-  liks <- logliks(data, model)
-  k <- ncol(liks)-1
-  ic <- (-2*liks[,1])+2*k
+  liks <- logLikMulti(model, data)
+  ic <- (-2*liks[,1])+2*model$k
   out = cbind(ic, liks[,-1])
-  colnames(out) = c("ic", colnames(liks)[-1])
+  colnames(out) = c("AIC", colnames(liks)[-1])
   out
 }
 
@@ -90,23 +111,23 @@ ICMulti.AIC <- function(data, model, ic){
 #'
 #'
 #' @export
-ICMultiMulti = function(data, models, ic, compress = F){
-  names(models) <- models
+ICMultiMulti = function(models, data, ic = "AIC", compress = F){
+  models = ecicModelList(models)
   p = length(models)
   n = nrow(data)
   N = ncol(data)
-  liks = sapply(models, function(x) ICMulti(data, x, ic))
-  ncols = sapply(liks, ncol)
+  ics = lapply(models, function(x) ICMulti(x, data, ic))
+  ncols = sapply(ics, ncol)
   ic.ix = c(1, cumsum(ncols[-p])+1)
-  liks1 = sapply(1:p, function(ix){
-    x = liks[[ix]]
-    'colnames<-'(x, paste(models[ix], colnames(x), sep = '.'))
+  ics1 = lapply(1:p, function(ix){
+    x = ics[[ix]]
+    'colnames<-'(x, paste(names(models)[ix], colnames(x), sep = '.'))
   } )
-  out = do.call(cbind, liks1)%>%data.frame
-  params = sapply(liks, function(x) x[,-1])
+  out = do.call(cbind, ics1)%>%data.frame
+  params = lapply(ics, function(x) x[,-1])
   if(!compress){
     out = list(ic = out[,ic.ix], parameters = params)
-    colnames(out$ic) = models
+    colnames(out$ic) = names(models)
   }
   return(out)
 }

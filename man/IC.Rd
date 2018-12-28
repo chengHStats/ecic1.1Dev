@@ -4,7 +4,7 @@
 \alias{IC}
 \title{Computes a given information criterion for data and a specified model.}
 \usage{
-IC(data, model, ic = "AIC", compress = F)
+IC(model, data, ic = "AIC", compress = F)
 }
 \arguments{
 \item{data:}{A data sample compatible witih the model.}

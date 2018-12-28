@@ -4,7 +4,7 @@
 \alias{ecicControl}
 \title{Bootstrap distributions of Information Criterion Differences}
 \usage{
-ecicControl(n, true, param, best, models, N = 1000, ic = "AIC")
+ecicControl(n, true, parameters, best, models, N = 1000, ic = "AIC")
 }
 \arguments{
 \item{n:}{Sample size.}

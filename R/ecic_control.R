@@ -22,11 +22,11 @@
 #'             my.models, N = 1000, ic = 'AIC')
 #'
 #' @export
-ecicControl = function(n, true, param,best, models, N = 1000, ic = 'AIC'){
+ecicControl = function(n, true, parameters,best, models, N = 1000, ic = 'AIC'){
   # Estimates distributions of IC differences between models from a fitted model.
   #
   # Args:
-  #   n: Sample size.adsfasdfdfs
+  #   n: Sample size.
   #   true: A string giving the name of the model to generate data from.
   #   models: A string vector of model names for selecting between.
   #   param: A vector of model parameters.
@@ -40,13 +40,14 @@ ecicControl = function(n, true, param,best, models, N = 1000, ic = 'AIC'){
   #   scores: Matrix of information criterion values for each model and sample.
   p <-  length(models)
 
-  names(models) <- models
+  models = ecicModelList(models)
   params.true <- NULL
-  best.ix <- which(models==best)
-  mf1 = ModelFrequencies(n, true, param, models, N, ic)
+  true.ix <- which(names(models)==true$ID)
+  best.ix <- which(names(models)==best$ID)
+  mf1 = suppressMessages(ModelFrequencies(n, true, parameters, models, N, ic))
 
   mins = apply(mf1$ic.scores, 1, function(x) which.min(x))
-  params.true = mf1$parameters[[true]] %>% as.matrix
+  params.true = mf1$parameters[[true.ix]] %>% as.matrix
 
 
   n.best <- sum(mins==best.ix)
@@ -60,12 +61,12 @@ ecicControl = function(n, true, param,best, models, N = 1000, ic = 'AIC'){
     params.keep = params.true[which.best,]
   }
 
-  data2 <- GenerateDataBest(n, true, param, best, models, N-(n.best), ic)
-  icmm <- ICMultiMulti(data2, models, ic)
+  data2 <- suppressMessages(GenerateDataBest(n, true, parameters, best, models, N-(n.best), ic))
+  icmm <- ICMultiMulti(models, data2, ic)
   scores2 = icmm$ic
   scores.full <- rbind(scores.keep,scores2)
 
-  params.true2 = icmm$parameters[[true]] %>% as.matrix
+  params.true2 = icmm$parameters[[true.ix]] %>% as.matrix
   rownames(scores.full) <- NULL
   dif <- sort(scores.full[,best.ix] - apply(scores.full[,-best.ix], 1, min),
               method = 'radix')
@@ -85,7 +86,8 @@ ecicControl = function(n, true, param,best, models, N = 1000, ic = 'AIC'){
   #
   # }
   #}
-  return(list(differences = dif, frequencies = mf1$frequencies,
+  return(structure(list(differences = dif,
               est.parameters = params.full, scores = scores.full,
-              data.control = data.full, data.freq = mf1$data))
+              data.control = data.full, frequencies = mf1),
+              class = 'ecicControl'))
 }

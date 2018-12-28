@@ -4,7 +4,7 @@
 \alias{ICMultiMulti}
 \title{Computes an information criterion for many data samples and list of models.}
 \usage{
-ICMultiMulti(data, models, ic, compress = F)
+ICMultiMulti(models, data, ic = "AIC", compress = F)
 }
 \arguments{
 \item{n:}{Sample size.}

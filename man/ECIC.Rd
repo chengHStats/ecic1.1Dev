@@ -4,7 +4,7 @@
 \alias{ECIC}
 \title{Perform the Error Control for Information Criteria (ECIC) Procedure.}
 \usage{
-ECIC(data, models, alpha = 0.05, N = 1000, ic = "AIC")
+ECIC(models, data, alpha = 0.05, N = 1000, ic = "AIC")
 }
 \arguments{
 \item{data:}{A vector/matrix data samplecompatible with the specified models.}

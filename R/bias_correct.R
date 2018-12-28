@@ -15,23 +15,24 @@
 #' ecic = ECIC(data, models, alpha = 0.05, N = 100, ic = "AIC", correct = T)
 #'
 #' @export
-BiasCorrect <- function(n, true, param, models, N = 1000, ic = 'AIC'){
+BiasCorrect <- function(n, true, parameters, models, N = 1000, ic = 'AIC'){
   # Corrects biased parameter estimates stemming from partitioning by best model
   #
-
-  names(models) <- models
-  p = length(param)
-  true.ix = which(models == true)
+  parameters.full = parameterCheck(true, parameters)
+  models = ecicModelList(models)
+  p = length(true$parameter.names)
+  true.ix = which(names(models) == true$ID)
   if(p > 0){
-    newdata <- GenerateDataBest(n, true, param, true, models, N)
-    params.boot = EstimateParametersMulti(newdata, true)
+    newdata <- suppressMessages(GenerateDataBest(n, true, parameters, true, models, N))
+    params.boot = suppressMessages(EstimateParametersMulti(true, newdata)$parameters)
 
     if(p == 1){
       param.boot <- params.boot %>% mean
     } else{
       param.boot <- params.boot%>% rowMeans
     }
-    param.corrected = 2*param-param.boot
-    return(list(parameters = param.corrected, data = newdata))
+    param.corrected = 2*unlist(parameters.full)[true$parameter.names]-param.boot
+    return(structure(list(parameters = param.corrected, data = newdata),
+                     class = 'ecicBiasCorrect'))
   }
 }

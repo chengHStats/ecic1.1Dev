@@ -4,7 +4,7 @@
 \alias{EstimateParametersMulti}
 \title{Computes the fitted parameters for multiple data samples and a model.}
 \usage{
-EstimateParametersMulti(data, model, flat = F)
+EstimateParametersMulti(model, data, flat = F)
 }
 \arguments{
 \item{data:}{A matrix of data samples compatible with the specified model.}
