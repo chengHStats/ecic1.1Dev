@@ -6,6 +6,21 @@
 \usage{
 GenerateData(n, model, parameters = list())
 }
+\arguments{
+\item{n:}{Sample size.}
+
+\item{true:}{A string giving the name of the model to generate data from.}
+
+\item{param:}{A vector of parameters specifying a fitted true model.}
+
+\item{best:}{A string giving the name of the model to be given as best.}
+
+\item{models:}{A string vector of model names for selecting between.}
+
+\item{N:}{Number of bootstrap samples.}
+
+\item{ic:}{String giving which information criterion to use (e.g. 'AICc', 'BIC')}
+}
 \value{
 : A list containing the following:.
 }

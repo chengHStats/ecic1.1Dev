@@ -1,12 +1,12 @@
 # ModelFrequencies--------------------------------------------------------------
 #'  Generate Bootstrap Information Criterion Frequencies
 #'
-#' @parameters n: Sample size.
-#' @parameters true: A string giving the name of the model to generate data from.
-#' @parameters parameters: A vector of parameterseters specifying a fitted true model.
-#' @parameters models: A string vector of model names for selecting between.
-#' @parameters N: Number of bootstrap samples.
-#' @parameters ic: String giving which information criterion to use (e.g. 'AICc', 'BIC')
+#' @param n: Sample size.
+#' @param true: A string giving the name of the model to generate data from.
+#' @param parameters: A vector of parameterseters specifying a fitted true model.
+#' @param models: A string vector of model names for selecting between.
+#' @param N: Number of bootstrap samples.
+#' @param ic: String giving which information criterion to use (e.g. 'AICc', 'BIC')
 #'
 #' @return: A list containing the following:.
 #'

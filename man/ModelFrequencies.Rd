@@ -6,6 +6,19 @@
 \usage{
 ModelFrequencies(n, true, parameters, models, N = 1000, ic = "AIC")
 }
+\arguments{
+\item{n:}{Sample size.}
+
+\item{true:}{A string giving the name of the model to generate data from.}
+
+\item{parameters:}{A vector of parameterseters specifying a fitted true model.}
+
+\item{models:}{A string vector of model names for selecting between.}
+
+\item{N:}{Number of bootstrap samples.}
+
+\item{ic:}{String giving which information criterion to use (e.g. 'AICc', 'BIC')}
+}
 \value{
 : A list containing the following:.
 }

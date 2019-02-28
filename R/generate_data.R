@@ -4,13 +4,13 @@ library(magrittr)
 # GenerateData -----------------------------------------------------------------
 #' Generate a sample from a fitted model
 #'
-#' @parametersn: Sample size.
-#' @parameterstrue: A string giving the name of the model to generate data from.
-#' @parametersparam: A vector of parameters specifying a fitted true model.
-#' @parametersbest: A string giving the name of the model to be given as best.
-#' @parametersmodels: A string vector of model names for selecting between.
-#' @parametersN: Number of bootstrap samples.
-#' @parametersic: String giving which information criterion to use (e.g. 'AICc', 'BIC')
+#' @param n: Sample size.
+#' @param true: A string giving the name of the model to generate data from.
+#' @param param: A vector of parameters specifying a fitted true model.
+#' @param best: A string giving the name of the model to be given as best.
+#' @param models: A string vector of model names for selecting between.
+#' @param N: Number of bootstrap samples.
+#' @param ic: String giving which information criterion to use (e.g. 'AICc', 'BIC')
 #
 #' @return: A list containing the following:.
 #'
@@ -159,13 +159,13 @@ GenerateData.spanos3 <- function(n, model, param){
 # Generate multiple data samples -----------------------------------------------
 #' Generate multiple samples from a fitted model
 #'
-#' @parametersn: Sample size.
-#' @parameterstrue: A string giving the name of the model to generate data from.
-#' @parametersparam: A vector of parameters specifying a fitted true model.
-#' @parametersbest: A string giving the name of the model to be given as best.
-#' @parametersmodels: A string vector of model names for selecting between.
-#' @parametersN: Number of bootstrap samples.
-#' @parametersic: String giving which information criterion to use (e.g. 'AICc', 'BIC')
+#' @param n: Sample size.
+#' @param true: A string giving the name of the model to generate data from.
+#' @param param: A vector of parameters specifying a fitted true model.
+#' @param best: A string giving the name of the model to be given as best.
+#' @param models: A string vector of model names for selecting between.
+#' @param N: Number of bootstrap samples.
+#' @param ic: String giving which information criterion to use (e.g. 'AICc', 'BIC')
 #
 #' @return: A list containing the following:.
 #'
@@ -292,13 +292,13 @@ GenerateDataMultiOld <- function(n, model, parameters, N){
 #' Generate multiple samples from a fitted model with specified best performing
 #' model
 #'
-#' @parametersn: Sample size.
-#' @parameterstrue: A string giving the name of the model to generate data from.
-#' @parametersparam: A vector of parameters specifying a fitted true model.
-#' @parametersbest: A string giving the name of the model to be given as best.
-#' @parametersmodels: A string vector of model names for selecting between.
-#' @parametersN: Number of bootstrap samples.
-#' @parametersic: String giving which information criterion to use (e.g. 'AICc', 'BIC')
+#' @param n: Sample size.
+#' @param true: A string giving the name of the model to generate data from.
+#' @param param: A vector of parameters specifying a fitted true model.
+#' @param best: A string giving the name of the model to be given as best.
+#' @param models: A string vector of model names for selecting between.
+#' @param N: Number of bootstrap samples.
+#' @param ic: String giving which information criterion to use (e.g. 'AICc', 'BIC')
 #
 #' @return: A list containing the following:.
 #'
