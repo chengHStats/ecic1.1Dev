@@ -1,3 +1,24 @@
+#' Specify a statistical model for the ECIC procedure.
+#'
+#' @param model.name: The name of the model (e.g. "norm")
+#' @param ID: A string giving a unique identifier for the model.
+#' @param fix: A list of parameters to hold fixed.
+
+#
+#' @return An ecicModel object.
+#'
+#' @examples
+#' standard.normal = ecicModel("norm",
+#'                             "standard",
+#'                             fix = list("mean" = 0, "sd" = 1))
+#' normal.sd.1 = ecicModel("norm",
+#'                             "standard",
+#'                             fix = list("sd" = 1))
+#'
+#' normal = ecicModel("norm")
+#'
+#' ecicModelList(standard.normal, normal.sd.1, normal)
+#'
 #' @export
 ecicModel <- function(model.name, ID = model.name, fix = list()){
   UseMethod("ecicModel", model.name)
