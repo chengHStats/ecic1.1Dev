@@ -3,7 +3,6 @@
 #' @param model.name: The name of the model (e.g. "norm")
 #' @param ID: A string giving a unique identifier for the model.
 #' @param fix: A list of parameters to hold fixed.
-
 #
 #' @return An ecicModel object.
 #'
