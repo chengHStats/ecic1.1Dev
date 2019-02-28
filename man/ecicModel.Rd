@@ -2,7 +2,11 @@
 % Please edit documentation in R/ecic_model.R
 \name{ecicModel}
 \alias{ecicModel}
+<<<<<<< HEAD
 \title{Specify a statistical model for the ECIC procedure.}
+=======
+\title{Bootstrap distributions of Information Criterion Differences}
+>>>>>>> 3b9041320587153c7e0a422717495a14debecaa3
 \usage{
 ecicModel(model.name, ID = model.name, fix = list())
 }
@@ -17,7 +21,11 @@ ecicModel(model.name, ID = model.name, fix = list())
 An ecicModel object.
 }
 \description{
+<<<<<<< HEAD
 Specify a statistical model for the ECIC procedure.
+=======
+Bootstrap distributions of Information Criterion Differences
+>>>>>>> 3b9041320587153c7e0a422717495a14debecaa3
 }
 \examples{
 standard.normal = ecicModel("norm",

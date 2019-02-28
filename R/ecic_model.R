@@ -1,4 +1,8 @@
+<<<<<<< HEAD
 #' Specify a statistical model for the ECIC procedure.
+=======
+#' Bootstrap distributions of Information Criterion Differences
+>>>>>>> 3b9041320587153c7e0a422717495a14debecaa3
 #'
 #' @param model.name: The name of the model (e.g. "norm")
 #' @param ID: A string giving a unique identifier for the model.
