@@ -64,9 +64,9 @@ ECIC = function(models, data, alpha = 0.05, N = 1000, ic = 'AIC'){
     )
   names(ecic.thresholds) = names(alt.models)
   decision.ecic = ifelse(dif.obs < min(ecic.thresholds),
-                          best, "No Decision")%>%unname
+                          best$ID, "No Decision")%>%unname
   decision.ba = ifelse(dif.obs < -10,
-                       best, "No Decision")%>%unname
+                       best$ID, "No Decision")%>%unname
 
 
   return(

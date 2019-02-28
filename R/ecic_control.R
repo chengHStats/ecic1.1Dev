@@ -68,7 +68,7 @@ ecicControl = function(n, true, parameters,best, models, N = 1000, ic = 'AIC'){
 
   params.true2 = icmm$parameters[[true.ix]] %>% as.matrix
   rownames(scores.full) <- NULL
-  dif <- sort(scores.full[,best.ix] - apply(scores.full[,-best.ix], 1, min),
+  dif <- sort(scores.full[,best.ix] - apply(as.matrix(scores.full[,-best.ix]), 1, min),
               method = 'radix')
 
   data.full = cbind(data.keep, data2)

@@ -16,3 +16,4 @@ GenerateData(25, model2, parameters) # Returns error
 data = GenerateData(10, model2, parameters)
 
 ecic.lmtest = ECIC(models.lm, data, N = 1000)
+ECIC:::datasets$spanos
