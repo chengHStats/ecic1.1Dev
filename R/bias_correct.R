@@ -20,6 +20,7 @@ BiasCorrect <- function(n, true, parameters, models, N = 1000, ic = 'AIC'){
   #
   parameters.full = parameterCheck(true, parameters)
   models = ecicModelList(models)
+  if (true$data.type==1){
   p = length(true$parameter.names)
   true.ix = which(names(models) == true$ID)
   if(p > 0){
@@ -34,5 +35,47 @@ BiasCorrect <- function(n, true, parameters, models, N = 1000, ic = 'AIC'){
     param.corrected = 2*unlist(parameters.full)[true$parameter.names]-param.boot
     return(structure(list(parameters = param.corrected, data = newdata),
                      class = 'ecicBiasCorrect'))
+  }
+  }
+  if (true$data.type=="paleoTS"){
+  p = true$k
+  parameters.full = parameterCheck(true, parameters)
+
+  if(p > 0){
+    newdata <- suppressMessages(GenerateDataBest(n, true, parameters, true, models, N))
+    fits.boot <- suppressMessages(EstimateParametersMulti(true, newdata))
+    if (class(true)[2]=="paleoGRW"){
+      params.model <- sapply(c("anc", "ms", "vs"), function(x) parameters.full[[x]])
+      params.boot <- matrix(unlist(sapply(fits.boot,
+                                          function(x) x[c('anc', 'ms', 'vs')])),
+                            nrow = 3,
+                            dimnames=list(c('anc', 'ms', 'vs'), c()))
+
+    }
+
+    if (class(true)[2]=="paleoStasis"){
+      params.model <- sapply(c("theta", "omega"), function(x) parameters.full[[x]])
+      params.boot <- matrix(unlist(sapply(fits.boot,
+                                          function(x) x[c('theta', 'omega')])),
+                                   nrow = 2,
+                                   dimnames=list(c('theta','omega'),c()))
+    }
+    if(p == 1){
+      param.boot <- params.boot %>% mean
+    } else{
+      param.boot <- params.boot%>% rowMeans
+      if (class(true)[2] =="paleoStasis"){
+        param.boot['omega'] = max(param.boot['omega'], 0.001)
+      }
+    }
+    param.corrected =  as.list(params.model-param.boot)
+    param.corrected$vp = parameters.full$vp
+    param.corrected$nn = parameters.full$nn
+    param.corrected$ns = parameters.full$ns
+    param.corrected$tt = parameters.full$tt
+
+    return(structure(list(parameters = param.corrected, data = newdata),
+                     class = 'ecicBiasCorrect'))
+  }
   }
 }

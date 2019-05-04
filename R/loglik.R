@@ -24,18 +24,23 @@ logLik.character = function(model, data, compress = F){
 }
 #' @export
 logLik.norm <- function(model, data, compress = F ){
-  param <- suppressMessages(EstimateParameters.norm(model, data)$parameters)
-  logl <- sum(log(dnorm(data, param[1], param[2])))
-  out <- c(logl, param) %>% setNames(c("log.likelihood", rep("est.parameters", 2)))
+  parameters <- suppressMessages(EstimateParameters.norm(model, data)$parameters)
+  logl <- sum(log(dnorm(data, parameters[1], parameters[2])))
+
+
+  out <- list(log.likelihood = logl, parameters = parameters)
+
   return(out)
 }
 #' @export
 logLik.rwalk <- function(model, data, compress = F ){
   ep <- suppressMessages(EstimateParameters.rwalk(model, data))
-  param <- ep$parameters
+  parameters <- ep$parameters
   steps <- ep$steps
-  logl <- sum(log(dnorm(steps, param[1], param[2])))
-  out <- c(logl, param) %>% setNames(c("log.likelihood", rep("est.parameters", 2)))
+  logl <- sum(log(dnorm(steps, parameters[1], parameters[2])))
+
+  out <- list(log.likelihood = logl, parameters = parameters)
+
   return(out)
 }
 #' @export
@@ -44,7 +49,9 @@ logLik.lmECIC <- function(model, data, compress = F){
   parameters <- ep$parameters
   resid <- ep$resid
   logl <- sum(log(dnorm(resid, 0, parameters['sd'])))
-  out <- c(logl, parameters) %>% setNames(c("log.likelihood", names(parameters)))
+
+  out <- list(log.likelihood = logl, parameters = parameters)
+
   return(out)
 }
 # logLikMulti ----------------------------------------------------------------------
@@ -78,6 +85,7 @@ logLikMulti <- function(model, data, compress = F){
 logLikMulti.ecicModel <- function(model, data, compress = F){
   NextMethod()
 }
+
 #' @export
 logLikMulti.norm <- function(model, data, compress = F){
   # Computes the log-likelihood for many datasets and a norm(mu, sd) model.
@@ -90,16 +98,16 @@ logLikMulti.norm <- function(model, data, compress = F){
   # Returns:
   #   logLik: The log-likelihood for the given data samples.
   #   param: The fitted model parameters, which are an intermediate step.
-  params <- suppressMessages( EstimateParametersMulti(model, data, T)$parameters )
+
+  parameters <- suppressMessages( EstimateParametersMulti(model, data)$parameters )
   n <- nrow(data)
   N <- ncol(data)
-  k = 2
-  liks <- crossprod(rep(1, n),
+  logl <- crossprod(rep(1, n),
                     log(dnorm(data,
-                              rep(params[1:N], each = n),
-                              rep(params[(N+1):(2*N)], each = n))))
-  out <- matrix(c(liks, params) , ncol = 1+k )
-  'colnames<-'(out, c("log.likelihood", model$parameter.names))
+                              rep(parameters[1,], each = n),
+                              rep(parameters[2,], each = n))))
+  out <- list(log.likelihood = logl, parameters =  parameters)
+  return(out)
 }
 #' @export
 logLikMulti.rwalk <- function(model, data, compress = F){
@@ -113,18 +121,23 @@ logLikMulti.rwalk <- function(model, data, compress = F){
   # Returns:
   #   logLik: The log-likelihood for the given data samples.
   #   param: The fitted model parameters, which are an intermediate step.
-  ep <- suppressMessages(EstimateParametersMulti(model, data, T))
-  params <- ep$parameters
+
+  ep <- suppressMessages(EstimateParametersMulti(model, data))
+  parameters <- ep$parameters
   steps <- ep$steps
   n <- nrow(data)
   N <- ncol(data)
   k = 2
-  liks <- crossprod(rep(1, n),
+  likelihood = dnorm(steps,
+                     rep(parameters[1, ], each=n),
+                     rep(parameters[2,], each=n))
+  logl <- crossprod(rep(1, n),
                     log(dnorm(steps,
-                              rep(params[1:N], each = n),
-                              rep(params[(N+1):(2*N)], each = n))))
-  out <- matrix(c(liks, params) , ncol = 1+k )
-  'colnames<-'(out, c("log.likelihood", model$parameter.names))
+                              rep(parameters[1, ], each = n),
+                              rep(parameters[2, ], each = n))))
+
+  out <- list(log.likelihood = logl, parameters =  parameters)
+  return(out)
 }
 #' @export
 logLikMulti.lmECIC = function(model, data, compress = F){
@@ -134,7 +147,7 @@ logLikMulti.lmECIC = function(model, data, compress = F){
   resid <- ep$resid
   N = ncol(resid)
   logl <- sapply(1:N, function(x) sum(log(dnorm(resid[,x], 0, parameters['sd',x]))))
-  out <- matrix(c(logl, parameters) , ncol = 1+k )
-  'colnames<-'(out, c("log.likelihood", model$parameter.names))
+  out <- list(log.likelihood = logl, parameters =  parameters)
+
 }
 

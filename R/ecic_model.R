@@ -131,7 +131,7 @@ ecicModelList = function(models = list()){
   names(models) = IDs
   # Check if all models have the same data type.
   data.types = sapply(models, function(x) x$data.type)
-  if(diff(range(data.types)) != 0){
+  if(length(unique(data.types)) != 1){
     stop("Specified models have incompatible data types.")
   }
   ns = lapply(models, function(x) x[["n"]])
