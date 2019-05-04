@@ -69,8 +69,15 @@ ECIC = function(models, data, alpha = 0.05, N = 1000, ic = 'AIC'){
   alpha.primes = sapply(alpha.primes, function(x) min(x, 1))
   alpha.primes.N = round(alpha.primes * N)
   differences = sapply(icd, function(x) x$differences)
-  ecic.thresholds = sapply(1:(p-1), function(x)
-    differences[[x]][alpha.primes.N[x]]
+  ecic.thresholds = sapply(1:(p-1), function(x){
+    try({
+    dif = differences[[x]]
+    dif.N = length(dif)
+    out = dif[round(alpha.primes[x] * dif.N)]
+    if(alpha.primes[x] == 1) out = 0
+    out
+    })
+  }
     )
   ecic.thresholds = sapply(ecic.thresholds, function(x) ifelse(is.na(x), 0, x))
   names(ecic.thresholds) = names(alt.models)
