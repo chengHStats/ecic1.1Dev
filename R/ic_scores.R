@@ -44,9 +44,9 @@ IC <- function(model, data, ic = 'AIC', compress = F){
 IC.AIC <- function(model, data, ic = 'AIC', compress = F){
   logl <- logLik(model, data)
   k = model$k
-  out = c(-2*logl[1] + 2*k, logl[-1])
-  names(out) = c('AIC', model$parameter.names)
-  out
+  IC = -2*logl$log.likelihood + 2*k
+  out = list(ic=IC, parameters = logl$parameters)
+  #names(out) = c('AIC', model$parameter.names)
 }
 
 # ICMulti ----------------------------------------------------------------------
@@ -91,11 +91,25 @@ ICMulti.AIC <- function(model, data, ic){
   # Returns:
   #   ic: the criterion value for the given data samples
   #   param: the fitted model parameters, which are an intermediate step
-  liks <- logLikMulti(model, data)
-  ic <- (-2*liks[,1])+2*model$k
-  out = cbind(ic, liks[,-1])
-  colnames(out) = c("AIC", colnames(liks)[-1])
-  out
+  if (class(data)=="matrix"){
+  x <- logLikMulti(model, data)
+  liks = x$log.likelihood
+  parameters = x$parameters
+  ic <- (-2*liks)+2*model$k
+  out = list(ic = ic, parameters = parameters)
+  return(out)
+}
+  if (class(data)=="list"){
+    if (class(data[[1]])=="paleoTS"){
+      fits <- logLikMulti(model, data)
+      out = c()
+      for (fit in fits){
+        fit$ic = -2*fit$log.likelihood + 2*model$k
+        out = c(out, list(fit))
+      }
+      out
+    }
+  }
 }
 
 # ICMultiMulti------------------------------------------------------------------
@@ -112,24 +126,32 @@ ICMulti.AIC <- function(model, data, ic){
 #'
 #' @export
 ICMultiMulti = function(models, data, ic = "AIC", compress = F){
-  models = ecicModelList(models)
-  p = length(models)
-  n = nrow(data)
-  N = ncol(data)
-  ics = lapply(models, function(x) ICMulti(x, data, ic))
-  ncols = sapply(ics, ncol)
-  ic.ix = c(1, cumsum(ncols[-p])+1)
-  ics1 = lapply(1:p, function(ix){
-    x = ics[[ix]]
-    'colnames<-'(x, paste(names(models)[ix], colnames(x), sep = '.'))
-  } )
-  out = do.call(cbind, ics1)%>%data.frame
-  params = lapply(ics, function(x) x[,-1])
-  if(!compress){
-    out = list(ic = out[,ic.ix], parameters = params)
-    colnames(out$ic) = names(models)
+  if (class(data)=="matrix"){
+    models = ecicModelList(models)
+    p = length(models)
+    data.type = models[[1]]$data.type
+
+    if(data.type==1){
+    n = nrow(data)
+    N = ncol(data)
+    x = lapply(models, function(x) ICMulti(x, data, ic))
+
+    ics = sapply(x, function(y) y$ic)
+    parameters = lapply(x, function(y) y$parameters)
+
+    out = list(ic = ics, parameters = parameters)
+    return(out)
+    }
   }
-  return(out)
+    if (class(data)=="list"){
+      if (class(data[[1]])=="paleoTS"){
+        out = lapply(models, function(model) ICMulti(model, data))
+        return(out)
+      }
+    }
+
+
+
 }
 
 

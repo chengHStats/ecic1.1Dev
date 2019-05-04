@@ -47,7 +47,9 @@ ecicControl = function(n, true, parameters,best, models, N = 1000, ic = 'AIC'){
   mf1 = suppressMessages(ModelFrequencies(n, true, parameters, models, N, ic))
 
   mins = apply(mf1$ic.scores, 1, function(x) which.min(x))
+  if(true$data.type!="paleoTS"){
   params.true = mf1$parameters[[true.ix]] %>% as.matrix
+
 
 
   n.best <- sum(mins==best.ix)
@@ -57,8 +59,7 @@ ecicControl = function(n, true, parameters,best, models, N = 1000, ic = 'AIC'){
   data.keep = mf1$data[, which.best]
 
   if(!is.null(dim(params.true))){
-
-    params.keep = params.true[which.best,]
+    params.keep = params.true[, which.best]
   }
 
   data2 <- suppressMessages(GenerateDataBest(n, true, parameters, best, models, N-(n.best), ic))
@@ -76,7 +77,7 @@ ecicControl = function(n, true, parameters,best, models, N = 1000, ic = 'AIC'){
   #if(!is.null(params.full)){
   params.full = NULL
   if(!is.null(params.true)){
-    params.full = rbind(params.true, params.true2)
+    params.full = cbind(params.true, params.true2)
   }
   # if(k == 1){
   #   params.true = c(estscores1.keep[[true]][-1,], estscores2[[true]][-1,])
@@ -86,8 +87,47 @@ ecicControl = function(n, true, parameters,best, models, N = 1000, ic = 'AIC'){
   #
   # }
   #}
+  #}
+  }else{
+    mins = apply(mf1$ic.scores, 1, function(x) which.min(x))
+
+    params.true = mf1$parameters[true.ix][[1]]
+
+
+
+    n.best <- sum(mins==best.ix)
+    which.best <- mins==best.ix
+
+    scores.keep = mf1$ic.scores[which.best,]
+    data.keep = mf1$data[which.best]
+
+    if(!is.null(params.true)){
+
+      params.keep = params.true[which.best]
+    }
+
+    data2 <- suppressMessages(GenerateDataBest(n, true, parameters, best, models, N-(n.best), ic))
+    icmm <- ICMultiMulti(models, data2, ic)
+    scores2 = sapply(icmm, function(x) sapply(x, function(y) y$ic))
+    scores.full <- rbind(scores.keep,scores2)
+
+    params.true2 = lapply(icmm[[true.ix]], function(x) x$parameters)
+    rownames(scores.full) <- NULL
+    dif <- sort(scores.full[,best.ix] - apply(as.matrix(scores.full[,-best.ix]), 1, min),
+                method = 'radix')
+
+    data.full = c(data.keep, data2)
+
+    #if(!is.null(params.full)){
+    params.full = NULL
+    if(!is.null(params.true)){
+      params.full = c(params.keep, params.true2)
+
+    }
+  }
   return(structure(list(differences = dif,
               est.parameters = params.full, scores = scores.full,
               data.control = data.full, frequencies = mf1),
               class = 'ecicControl'))
+
 }

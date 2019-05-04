@@ -1,3 +1,6 @@
+length.paleoTS = function(data){
+  length(data$mm)
+}
 #' Perform the Error Control for Information Criteria (ECIC) Procedure.
 #'
 #' @param data: A vector/matrix data samplecompatible with the specified models.
@@ -35,9 +38,15 @@ ECIC = function(models, data, alpha = 0.05, N = 1000, ic = 'AIC'){
   n <- length(data)
 
   obs = lapply(models, function(x) IC(x, data, ic)) #observed
-  params.obs = lapply(obs, function(x) as.list(x[-1]))
-  scores.obs = sapply(obs, function(x) x[1])
 
+  if (class(data)!= "paleoTS"){
+  params.obs = lapply(obs, function(x) x$parameters)
+  scores.obs = sapply(obs, function(x) x$ic)
+  } else {
+    params.obs = lapply(obs, function(x) x$parameters)
+    scores.obs = sapply(obs, function(x) x$ic)
+
+  }
 
 
   best.ix = which.min(scores.obs)
@@ -47,7 +56,7 @@ ECIC = function(models, data, alpha = 0.05, N = 1000, ic = 'AIC'){
 
   dif.obs = scores.obs[best.ix]-min(scores.obs[-best.ix])
   names(dif.obs) = best$ID
-  bc = suppressMessages(lapply(models, function(x)
+  bc = suppressMessages(lapply(alt.models, function(x)
     BiasCorrect(n, x, params.obs[[x$ID]],
                 models, N, ic)))
 
@@ -57,15 +66,18 @@ ECIC = function(models, data, alpha = 0.05, N = 1000, ic = 'AIC'){
   best.freq = sapply(icd, function(x) x$frequencies$frequencies[best.ix])
   alpha.primes = sapply(best.freq,
                         function(x) ifelse(x==0, 1, alpha/x))
+  alpha.primes = sapply(alpha.primes, function(x) min(x, 1))
   alpha.primes.N = round(alpha.primes * N)
   differences = sapply(icd, function(x) x$differences)
   ecic.thresholds = sapply(1:(p-1), function(x)
-    differences[alpha.primes.N[x],x]
+    differences[[x]][alpha.primes.N[x]]
     )
+  ecic.thresholds = sapply(ecic.thresholds, function(x) ifelse(is.na(x), 0, x))
   names(ecic.thresholds) = names(alt.models)
   decision.ecic = ifelse(dif.obs < min(ecic.thresholds),
                           best$ID, "No Decision")%>%unname
-  decision.ba = ifelse(dif.obs < -10,
+
+  decision.ba = ifelse(dif.obs < -2,
                        best$ID, "No Decision")%>%unname
 
 
@@ -102,4 +114,6 @@ plot.ecicFrequencies = function(ec){
 
 
 }
+
+
 

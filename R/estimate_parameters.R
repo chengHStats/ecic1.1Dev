@@ -28,6 +28,7 @@ EstimateParameters.character <- function(model, data){
                    })
  EstimateParameters(model2, data)
 }
+
 #' @export
 EstimateParameters.ecicModel <- function(model, data){
 
@@ -38,8 +39,9 @@ EstimateParameters.ecicModel <- function(model, data){
   }
   NextMethod("EstimateParameters", model)
 }
-# EstimateParameters.norm ------------------------------------------------------
+
 #' @export
+# EstimateParameters.norm ------------------------------------------------------
 EstimateParameters.norm <- function(model, data){
   # Computes the fitted parameters for a data sample and a norm(mu, sd) model.
   n <- length(data)
@@ -55,8 +57,8 @@ EstimateParameters.norm <- function(model, data){
   }
   return(list(parameters = setNames(c(mean, sd), c("mean", "sd"))))
 }
-
 # EstimateParameters.rwalk -----------------------------------------------------------
+
 #' @export
 EstimateParameters.rwalk <- function(model, data){
   # Computes fitted parameters for a data sample and random walk (mu, sd) model.
@@ -65,18 +67,20 @@ EstimateParameters.rwalk <- function(model, data){
     steps <- c(data[1], diff(data))
     if(is.null(model$fixed.parameters$step.mean)){
       step.mean <- sum(steps)/n
+    } else{
+      step.mean = model$fixed.parameters$step.mean
     }
     if(is.null(model$fixed.parameters$step.sd)){
       step.sd <- (crossprod(steps-step.mean)/n)**.5
     }
   } else {
-    step.mean = model$fixed.parameters$step.mean
     step.sd = model$fixed.parameters$step.sd
   }
   return(list(parameters = setNames(c(step.mean, step.sd),
                                     c("step.mean", "step.sd")),
               steps = steps))
 }
+
 #' @export
 EstimateParameters.lmECIC = function(model, data){
   if(length(data) != model$n){
@@ -132,6 +136,7 @@ EstimateParametersMulti.ecicModel <- function(model, data, flat = F){
   }
   NextMethod()
 }
+
 #' @export
 EstimateParametersMulti.norm <- function(model, data, flat = F, ...){
   # Computes fitted parameters for multiple data samples and norm(mu, sd) model.
@@ -156,11 +161,12 @@ EstimateParametersMulti.norm <- function(model, data, flat = F, ...){
   }
   return(list(parameters = out))
 }
+
 #' @export
 EstimateParametersMulti.rwalk <- function(model, data, flat = F, ...){
   # Computes fitted parameters for multiple data samples and norm(mu, sd) model.
-
-
+  N = dim(data)[2]
+  n = dim(data)[1]
   if(is.null(model$fixed.parameters$step.mean) |
      is.null(model$fixed.parameters$step.sd)){
     steps = rbind(data[1,], diff(data))
@@ -182,8 +188,9 @@ EstimateParametersMulti.rwalk <- function(model, data, flat = F, ...){
     matrix(c(step.means, step.sds), nrow = 2, byrow = TRUE,
            dimnames = list(c("step.mean", "step.sd"), NULL))
   }
-  return(parameters = out, steps = steps)
+  return(list(parameters = out, steps = steps))
 }
+
 #' @export
 EstimateParametersMulti.lmECIC = function(model, data){
   n <- nrow(data)

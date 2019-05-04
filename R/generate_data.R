@@ -224,7 +224,7 @@ GenerateDataMulti.norm <- function(n, model, parameters, N){
 GenerateDataMulti.rwalk <- function(n, model, parameters, N){
   rnorm(n * N, parameters$step.mean, parameters$step.sd) %>%
     matrix(ncol <- N) %>%
-    apply(2, cumsum)
+    apply(1, cumsum)
 }
 #' @export
 GenerateDataMulti.lmECIC <- function(n, model, parameters, N){
@@ -309,7 +309,9 @@ GenerateDataBest <- function(n, true, parameters, best, models, N, ic = 'AIC', .
   models = ecicModelList(models)
   best.id = best$ID
   true.id = true$ID
-  check <- suppressMessages(GenerateData(n, models[[true.id]], parameters))
+  if (models[[1]]$data.type==1){
+    check <- suppressMessages(GenerateData(n, models[[true.id]], parameters))
+
   if(is.numeric(check)){
     mins <- 0
     best.ix <- which(names(models)==best.id)
@@ -336,4 +338,34 @@ GenerateDataBest <- function(n, true, parameters, best, models, N, ic = 'AIC', .
     if(dim(data.best2)[2] > N) out <- as.matrix(data.best2[,1:N])
     if(dim(data.best2)[2] <= N) out <- as.matrix(data.best2)
     return(out)}
-}
+  }
+  if (models[[1]]$data.type=="paleoTS"){
+    mins <- 0
+    best.ix <- which(names(models)==best.id)
+    it1 <- 0
+    nonzero <- FALSE
+    while(!(best.ix %in% mins) &  it1 < 1000){
+      data <- suppressMessages(GenerateDataMulti(n, models[[true.id]], parameters, N*3))
+      fits <- ICMultiMulti(models, data, ic)
+      ics <- sapply(fits, function(x) sapply(x, function(y) y$ic))
+      mins <- apply(ics,1,which.min)
+      data.best2 <- as.matrix(data[mins==best.ix])
+      if(best.ix %in% mins) nonzero <- TRUE
+      it1 <- it1 + N
+    }
+    if(!nonzero)return(0)
+    it <- 0
+    while(length(data.best2) < N & it < 4){
+      data <- suppressMessages(GenerateDataMulti(n, models[[true.id]], parameters, N*3))
+      scores <- ICMultiMulti(models, data, ic)
+      ics <- sapply(scores, function(x) sapply(x, function(y) y$ic))
+      mins <- apply(ics,1,which.min)
+      data.best <- data[mins==best.ix]
+      data.best2 <- cbind(data.best2, data.best)
+      it <- it + 1
+    }
+    if(length(data.best2) > N) out <- data.best2[1:N]
+    if(length(data.best2) <= N) out <- data.best2
+    return(out)}
+  }
+
