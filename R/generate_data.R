@@ -325,7 +325,7 @@ GenerateDataBest <- function(n, true, parameters, best, models, N, ic = 'AIC', .
       if(best.ix %in% mins) nonzero <- TRUE
       it1 <- it1 + N
     }
-    if(!nonzero)return(0)
+    if(!nonzero) return(NA)
     it <- 0
     while(dim(data.best2)[2] < N & it < 4){
       data <- suppressMessages(GenerateDataMulti(n, models[[true.id]], parameters, N*3))

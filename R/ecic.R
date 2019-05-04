@@ -60,15 +60,14 @@ ECIC = function(models, data, alpha = 0.05, N = 1000, ic = 'AIC'){
     BiasCorrect(n, x, params.obs[[x$ID]],
                 models, N, ic)))
 
-  icd = lapply(alt.models, function(x)
-    ecicControl(n, x, bc[[x$ID]]$parameters, best, models, N, ic))
+  icd = lapply(alt.models, function(x) ecicControl(n, x, bc[[x$ID]]$parameters, best, models, N, ic))
 
   best.freq = sapply(icd, function(x) x$frequencies$frequencies[best.ix])
   alpha.primes = sapply(best.freq,
                         function(x) ifelse(x==0, 1, alpha/x))
   alpha.primes = sapply(alpha.primes, function(x) min(x, 1))
   alpha.primes.N = round(alpha.primes * N)
-  differences = sapply(icd, function(x) x$differences)
+  differences = lapply(icd, function(x) x$differences)
   ecic.thresholds = sapply(1:(p-1), function(x){
     try({
     dif = differences[[x]]

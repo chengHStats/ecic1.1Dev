@@ -46,6 +46,13 @@ ecicControl = function(n, true, parameters,best, models, N = 1000, ic = 'AIC'){
   best.ix <- which(names(models)==best$ID)
   mf1 = suppressMessages(ModelFrequencies(n, true, parameters, models, N, ic))
 
+  if(mf1$frequencies[best.ix] == 0){
+    return(structure(list(differences = NA,
+                          est.parameters = NA, scores = NA,
+                          data.control = NA, frequencies = mf1),
+                     class = 'ecicControl'))
+  }
+
   mins = apply(mf1$ic.scores, 1, function(x) which.min(x))
   if(true$data.type!="paleoTS"){
   params.true = mf1$parameters[[true.ix]] %>% as.matrix
@@ -67,13 +74,19 @@ ecicControl = function(n, true, parameters,best, models, N = 1000, ic = 'AIC'){
   scores2 = icmm$ic
   scores.full <- rbind(scores.keep,scores2)
 
+
+
+  data.full = cbind(data.keep, data2)
+  if(min(is.na(data.full))==1){
+    return(structure(list(differences = c(0),
+                          est.parameters = NA, scores = NA,
+                          data.control = NA, frequencies = mf1),
+                     class = 'ecicControl'))
+  }
   params.true2 = icmm$parameters[[true.ix]] %>% as.matrix
   rownames(scores.full) <- NULL
   dif <- sort(scores.full[,best.ix] - apply(as.matrix(scores.full[,-best.ix]), 1, min),
               method = 'radix')
-
-  data.full = cbind(data.keep, data2)
-
   #if(!is.null(params.full)){
   params.full = NULL
   if(!is.null(params.true)){
