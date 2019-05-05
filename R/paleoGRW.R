@@ -96,6 +96,9 @@ EstimateParameters.paleoGRW = function(model, data){
           fitGRW$parameters = list()
           fitGRW$parameters['vstep'] = 0
           fitGRW$parameters['vstep'] = mle.URW(data)['vstep']
+          if (is.na(fitGRW$parameters['vstep'])) fitGRW$parameters['vstep'] = 0.01
+          if (is.null(fitGRW$parameters['vstep'])) fitGRW$parameters['vstep'] = 0.01
+
           if (fitGRW$parameters['vstep'] <= 0) fitGRW$parameters['vstep'] = 0.01
           fitGRW$parameters['anc'] = data$mm[1]
 
@@ -118,6 +121,7 @@ EstimateParameters.paleoGRW = function(model, data){
         fitGRW$parameters['vstep'] = 0
         fitGRW$parameters['vstep'] = mle.GRW(data)['vstep']
         if (is.null(fitGRW$parameters['vstep'])) fitGRW$parameters['vstep'] = 0.01
+        if (is.na(fitGRW$parameters['vstep'])) fitGRW$parameters['vstep'] = 0.01
 
         if (fitGRW$parameters['vstep'] <= 0) fitGRW$parameters['vstep'] = 0.01
         fitGRW$parameters['mstep'] = mle.GRW(data)['mstep']
@@ -171,6 +175,7 @@ logLik.paleoGRW <- function(model, data, compress = F ){
 
           fitGRW$parameters['vstep'] = mle.URW(data)['vstep']
           if (is.null(fitGRW$parameters['vstep'])) fitGRW$parameters['vstep'] = 0.01
+          if (is.na(fitGRW$parameters['vstep'])) fitGRW$parameters['vstep'] = 0.01
 
           if (fitGRW$parameters['vstep'] <= 0) fitGRW$parameters['vstep'] = 0.01
           fitGRW$parameters['anc'] = data$mm[1]}
@@ -195,6 +200,7 @@ logLik.paleoGRW <- function(model, data, compress = F ){
 
           fitGRW$parameters['vstep'] = mle.GRW(data)['vstep']
           if (is.null(fitGRW$parameters['vstep'])) fitGRW$parameters['vstep'] = 0.01
+          if (is.na(fitGRW$parameters['vstep'])) fitGRW$parameters['vstep'] = 0.01
 
           if (fitGRW$parameters['vstep'] <= 0) fitGRW$parameters['vstep'] = 0.01
 
