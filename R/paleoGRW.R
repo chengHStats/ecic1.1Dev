@@ -92,7 +92,12 @@ EstimateParameters.paleoGRW = function(model, data){
         fitGRW <- fitSimple(data, "URW", pool = FALSE),
         error = function(e) {
           message("used MLE")
-          fitGRW = mle.URW(data)}
+          fitGRW = list()
+          fitGRW$parameters['vstep'] = mle.URW(data)['vstep']
+          if (fitGRW$parameters['vstep'] <= 0) fitGRW$parameters['vstep'] = 0.01
+          fitGRW$parameters['anc'] = data$mm[1]
+
+          }
       )
     }
 
@@ -106,7 +111,11 @@ EstimateParameters.paleoGRW = function(model, data){
       fitGRW <- fitSimple(data, "GRW", pool = FALSE),
       error = function(e) {
         message("used MLE")
-        fitGRW = mle.GRW(data)}
+        fitGRW = list()
+        fitGRW$parameters['vstep'] = mle.GRW(data)['vstep']
+        if (fitGRW$parameters['vstep'] <= 0) fitGRW$parameters['vstep'] = 0.01
+        fitGRW$parameters['mstep'] = mle.GRW(data)['mstep']
+        fitGRW$parameters['anc'] = data$mm[1]}
     )
   }
   paramGRW = fitGRW$parameters
@@ -150,7 +159,10 @@ logLik.paleoGRW <- function(model, data, compress = F ){
         fitGRW <- fitSimple(data, "URW", pool = FALSE)},
         error = function(e) {
           message("used MLE")
-          fitGRW = mle.URW(data)}
+          fitGRW = list()
+          fitGRW$parameters['vstep'] = mle.URW(data)['vstep']
+          if (fitGRW$parameters['vstep'] <= 0) fitGRW$parameters['vstep'] = 0.01
+          fitGRW$parameters['anc'] = data$mm[1]}
       )
     }
     paramGRW = fitGRW$parameters
@@ -166,7 +178,13 @@ logLik.paleoGRW <- function(model, data, compress = F ){
         fitGRW <- fitSimple(data, "GRW", pool = FALSE)},
         error = function(e) {
           message("used MLE")
-          fitGRW = mle.GRW(data)
+          fitGRW = list()
+          fitGRW$parameters['vstep'] = mle.GRW(data)['vstep']
+          if (fitGRW$parameters['vstep'] <= 0) fitGRW$parameters['vstep'] = 0.01
+
+          fitGRW$parameters['mstep'] = mle.GRW(data)['mstep']
+
+          fitGRW$parameters['anc'] = data$mm[1]
           }
       )
     }

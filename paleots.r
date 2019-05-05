@@ -16,7 +16,6 @@ data = GenerateData(6, grw, parameters)
 
   library(tictoc)
   tic()
-
   paleoECICtest = ECIC(models, data, N=100)
   toc()
 
