@@ -32,7 +32,7 @@ length.paleoTS = function(data){
 #' ECIC(my.data, my.models, alpha = 0.05, N = 1000, ic = "AIC")
 #'
 #' @export
-ECIC = function(models, data, alpha = c(0.01, 0.05, 0.1), N = 1000, ic = 'AIC'){
+ECIC = function(models, data, alpha = c(0.01, 0.05, 0.1), N = 1000, ic = 'AIC', genBest = TRUE){
   models = ecicModelList(models)
   p <- length(models)
 
@@ -61,7 +61,7 @@ ECIC = function(models, data, alpha = c(0.01, 0.05, 0.1), N = 1000, ic = 'AIC'){
 
   bc = suppressMessages(lapply(alt.models, function(x)
     BiasCorrect(n, x, params.obs[[x$ID]],
-                models, N, ic)))
+                models, N, ic, genBest)))
 
   icd = lapply(alt.models, function(x) ecicControl(n, x, bc[[x$ID]]$parameters, best, models, N, ic))
 

@@ -15,7 +15,7 @@
 #' ecic = ECIC(data, models, alpha = 0.05, N = 100, ic = "AIC", correct = T)
 #'
 #' @export
-BiasCorrect <- function(n, true, parameters, models, N = 1000, ic = 'AIC'){
+BiasCorrect <- function(n, true, parameters, models, N = 1000, ic = 'AIC', genBest = TRUE){
   # Corrects biased parameter estimates stemming from partitioning by best model
   #
   parameters.full = parameterCheck(true, parameters)
@@ -24,7 +24,12 @@ BiasCorrect <- function(n, true, parameters, models, N = 1000, ic = 'AIC'){
   p = length(true$parameter.names)
   true.ix = which(names(models) == true$ID)
   if(p > 0){
+    if (genBest){
     newdata <- suppressMessages(GenerateDataBest(n, true, parameters, true, models, N))
+    } else {
+      newdata <- suppressMessages(GenerateDataMulti(n, true, parameters, true, models, N))
+
+    }
     params.boot = suppressMessages(EstimateParametersMulti(true, newdata)$parameters)
 
     if(p == 1){
@@ -42,7 +47,12 @@ BiasCorrect <- function(n, true, parameters, models, N = 1000, ic = 'AIC'){
   parameters.full = parameterCheck(true, parameters)
 
   if(p > 0){
-    newdata <- suppressMessages(GenerateDataBest(n, true, parameters, true, models, N))
+    if (genBest){
+      newdata <- suppressMessages(GenerateDataBest(n, true, parameters, true, models, N))
+    } else {
+      newdata <- suppressMessages(GenerateDataMulti(n, true, parameters, true, models, N))
+
+    }
     fits.boot <- suppressMessages(EstimateParametersMulti(true, newdata))
     if (class(true)[2]=="paleoGRW"){
       if ("ms" %in% names(true$fixed.parameters)){
