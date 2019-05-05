@@ -63,7 +63,7 @@ GenerateData.paleoStasis <- function(n, model, parameters){
   vp = parameters$vp
   nn = parameters$nn
   tt = parameters$tt
-
+  if (omega < 0 ) omega = 0.0001
   out = sim.Stasis(ns=ns, theta=theta,omega=omega, vp=vp, nn=nn, tt=tt)
   return(out)
 }
