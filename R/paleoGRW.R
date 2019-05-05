@@ -88,8 +88,11 @@ EstimateParameters.paleoGRW = function(model, data){
     attempt <- 1
     while( is.null(fitGRW) && attempt <= 5 ) {
       attempt <- attempt + 1
-      try(
-        fitGRW <- fitSimple(data, "URW", pool = FALSE)
+      tryCatch(
+        fitGRW <- fitSimple(data, "URW", pool = FALSE),
+        error = function(e) {
+          message("used MLE")
+          fitGRW = mle.URW(data)}
       )
     }
 
@@ -99,8 +102,11 @@ EstimateParameters.paleoGRW = function(model, data){
   attempt <- 1
   while( is.null(fitGRW) && attempt <= 5 ) {
     attempt <- attempt + 1
-    try(
-      fitGRW <- fitSimple(data, "GRW", pool = FALSE)
+    tryCatch(
+      fitGRW <- fitSimple(data, "GRW", pool = FALSE),
+      error = function(e) {
+        message("used MLE")
+        fitGRW = mle.GRW(data)}
     )
   }
   paramGRW = fitGRW$parameters
@@ -138,8 +144,13 @@ logLik.paleoGRW <- function(model, data, compress = F ){
     attempt <- 1
     while( is.null(fitGRW) && attempt <= 5 ) {
       attempt <- attempt + 1
-      try(
-        fitGRW <- fitSimple(data, "URW", pool = FALSE)
+      tryCatch({
+        #seed = sample(1:10000, 1)
+        #set.seed(seed)
+        fitGRW <- fitSimple(data, "URW", pool = FALSE)},
+        error = function(e) {
+          message("used MLE")
+          fitGRW = mle.URW(data)}
       )
     }
     paramGRW = fitGRW$parameters
@@ -149,8 +160,14 @@ logLik.paleoGRW <- function(model, data, compress = F ){
     attempt <- 1
     while( is.null(fitGRW) && attempt <= 5 ) {
       attempt <- attempt + 1
-      try(
-        fitGRW <- fitSimple(data, "GRW", pool = FALSE)
+      tryCatch({
+        #seed = sample(1:10000, 1)
+        #set.seed(seed)
+        fitGRW <- fitSimple(data, "GRW", pool = FALSE)},
+        error = function(e) {
+          message("used MLE")
+          fitGRW = mle.GRW(data)
+          }
       )
     }
   paramGRW = fitGRW$parameters

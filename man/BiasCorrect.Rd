@@ -4,7 +4,8 @@
 \alias{BiasCorrect}
 \title{Corrects for bias in parameter estimates due to model uncertainty.}
 \usage{
-BiasCorrect(n, true, parameters, models, N = 1000, ic = "AIC")
+BiasCorrect(n, true, parameters, models, N = 1000, ic = "AIC",
+  genBest = TRUE)
 }
 \arguments{
 \item{n:}{Sample size.}

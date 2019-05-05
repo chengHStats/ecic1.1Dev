@@ -79,7 +79,20 @@ EstimateParameters.paleoStasis = function(model, data){
   #              length(data), ".", sep = ""))
   # }
   pop.var= pool.var(data)
-  paramStasis = fitSimple(data, "Stasis",pool=FALSE)$parameters
+  fitStasis <- NULL
+  attempt <- 1
+  while( is.null(fitStasis) && attempt <= 5 ) {
+    attempt <- attempt + 1
+    tryCatch({
+      #seed = sample(1:10000, 1)
+      #set.seed(seed)
+      fitStasis<- fitSimple(data, "Stasis", pool = FALSE)},
+      error = function(e) {
+        message("used MLE")
+        fitStasis = mle.Stasis(data)}
+    )
+  }
+  paramStasis = fitStasis$parameters
   parameters = list()
   parameters$theta = unname(paramStasis['theta'])
   parameters$omega = unname(paramStasis['omega'])
@@ -101,7 +114,19 @@ logLik.paleoStasis <- function(model, data, compress = F ){
   #              length(data), ".", sep = ""))
   # }
   pop.var= pool.var(data)
-  fitStasis = fitSimple(data, "Stasis", pool=FALSE)
+  fitStasis <- NULL
+  attempt <- 1
+  while( is.null(fitStasis) && attempt <= 5 ) {
+    attempt <- attempt + 1
+    tryCatch({
+      #seed = sample(1:10000, 1)
+      #set.seed(seed)
+      fitStasis<- fitSimple(data, "Stasis", pool = FALSE)},
+      error = function(e) {
+        message("used MLE")
+        fitStasis = mle.Stasis(data)}
+    )
+  }
   paramStasis = fitStasis$parameters
   parameters = list()
   parameters$theta = unname(paramStasis['theta'])

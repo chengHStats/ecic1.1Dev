@@ -25,7 +25,7 @@ BiasCorrect <- function(n, true, parameters, models, N = 1000, ic = 'AIC', genBe
   true.ix = which(names(models) == true$ID)
   if(p > 0){
     if (genBest){
-    newdata <- suppressMessages(GenerateDataBest(n, true, parameters, true, models, N))
+    newdata <- GenerateDataBest(n, true, parameters, true, models, N)
     } else {
       newdata <- suppressMessages(GenerateDataMulti(n, true, parameters, true, models, N))
 

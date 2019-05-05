@@ -59,9 +59,9 @@ ECIC = function(models, data, alpha = c(0.01, 0.05, 0.1), N = 1000, ic = 'AIC', 
   names(dif.obs) = best$ID
 
 
-  bc = suppressMessages(lapply(alt.models, function(x)
+  bc = lapply(alt.models, function(x)
     BiasCorrect(n, x, params.obs[[x$ID]],
-                models, N, ic, genBest)))
+                models, N, ic, genBest))
 
   icd = lapply(alt.models, function(x) ecicControl(n, x, bc[[x$ID]]$parameters, best, models, N, ic))
 
@@ -76,7 +76,7 @@ ECIC = function(models, data, alpha = c(0.01, 0.05, 0.1), N = 1000, ic = 'AIC', 
     try({
     dif = differences[[x]]
     dif.N = length(dif)
-    out = dif[round(alpha.prime[x] * dif.N)]
+    out = dif[ceiling(alpha.prime[x] * dif.N)]
     if(alpha.prime[x] == 1) out = 0
     out
     })
