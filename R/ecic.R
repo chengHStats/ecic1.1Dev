@@ -32,9 +32,10 @@ length.paleoTS = function(data){
 #' ECIC(my.data, my.models, alpha = 0.05, N = 1000, ic = "AIC")
 #'
 #' @export
-ECIC = function(models, data, alpha = 0.05, N = 1000, ic = 'AIC'){
+ECIC = function(models, data, alpha = c(0.01, 0.05, 0.1), N = 1000, ic = 'AIC'){
   models = ecicModelList(models)
   p <- length(models)
+
   n <- length(data)
 
   obs = lapply(models, function(x) IC(x, data, ic)) #observed
@@ -43,11 +44,11 @@ ECIC = function(models, data, alpha = 0.05, N = 1000, ic = 'AIC'){
   params.obs = lapply(obs, function(x) x$parameters)
   scores.obs = sapply(obs, function(x) x$ic)
   } else {
+    n = length(data$nn)
     params.obs = lapply(obs, function(x) x$parameters)
     scores.obs = sapply(obs, function(x) x$ic)
 
   }
-
 
   best.ix = which.min(scores.obs)
   best = models[[best.ix]]
@@ -56,6 +57,8 @@ ECIC = function(models, data, alpha = 0.05, N = 1000, ic = 'AIC'){
 
   dif.obs = scores.obs[best.ix]-min(scores.obs[-best.ix])
   names(dif.obs) = best$ID
+
+
   bc = suppressMessages(lapply(alt.models, function(x)
     BiasCorrect(n, x, params.obs[[x$ID]],
                 models, N, ic)))
@@ -63,25 +66,31 @@ ECIC = function(models, data, alpha = 0.05, N = 1000, ic = 'AIC'){
   icd = lapply(alt.models, function(x) ecicControl(n, x, bc[[x$ID]]$parameters, best, models, N, ic))
 
   best.freq = sapply(icd, function(x) x$frequencies$frequencies[best.ix])
-  alpha.primes = sapply(best.freq,
-                        function(x) ifelse(x==0, 1, alpha/x))
-  alpha.primes = sapply(alpha.primes, function(x) min(x, 1))
-  alpha.primes.N = round(alpha.primes * N)
+  alpha.primes = lapply(alpha,
+                        function(a)  sapply(best.freq, function(x) ifelse(x==0, 1, a/x)))
+  alpha.primes = lapply(alpha.primes, function(x) sapply(x, function(a) min(a, 1)))
+  alpha.primes.N = lapply(alpha.primes, function(x) round(x * N))
   differences = lapply(icd, function(x) x$differences)
-  ecic.thresholds = sapply(1:(p-1), function(x){
+  ecic.thresholds = lapply(alpha.primes, function(alpha.prime) {
+    thresh = sapply(1:(p-1), function(x){
     try({
     dif = differences[[x]]
     dif.N = length(dif)
-    out = dif[round(alpha.primes[x] * dif.N)]
-    if(alpha.primes[x] == 1) out = 0
+    out = dif[round(alpha.prime[x] * dif.N)]
+    if(alpha.prime[x] == 1) out = 0
     out
     })
-  }
-    )
-  ecic.thresholds = sapply(ecic.thresholds, function(x) ifelse(is.na(x), 0, x))
-  names(ecic.thresholds) = names(alt.models)
-  decision.ecic = ifelse(dif.obs < min(ecic.thresholds),
-                          best$ID, "No Decision")%>%unname
+    })
+    names(thresh) = names(alt.models)
+    thresh
+    }
+  )
+  ecic.thresholds = lapply(ecic.thresholds, function(x)  sapply(x, function(y) ifelse(is.na(y), 0, y)))
+
+  names(ecic.thresholds) = alpha
+
+  decision.ecic = sapply(ecic.thresholds, function(thresh) ifelse(dif.obs < min(thresh),
+                          best$ID, "No Decision")%>%unname)
 
   decision.ba = ifelse(dif.obs < -2,
                        best$ID, "No Decision")%>%unname

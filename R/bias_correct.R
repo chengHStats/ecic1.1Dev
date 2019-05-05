@@ -45,11 +45,22 @@ BiasCorrect <- function(n, true, parameters, models, N = 1000, ic = 'AIC'){
     newdata <- suppressMessages(GenerateDataBest(n, true, parameters, true, models, N))
     fits.boot <- suppressMessages(EstimateParametersMulti(true, newdata))
     if (class(true)[2]=="paleoGRW"){
-      params.model <- sapply(c("anc", "ms", "vs"), function(x) parameters.full[[x]])
-      params.boot <- matrix(unlist(sapply(fits.boot,
-                                          function(x) x[c('anc', 'ms', 'vs')])),
-                            nrow = 3,
-                            dimnames=list(c('anc', 'ms', 'vs'), c()))
+      if ("ms" %in% names(true$fixed.parameters)){
+        params.model <- sapply(c("anc", "vs"), function(x) parameters.full[[x]])
+        params.boot <- matrix(unlist(sapply(fits.boot,
+                                            function(x) x[c('anc', 'vs')])),
+                              nrow = 2,
+                              dimnames=list(c('anc', 'vs'), c()))
+
+      }else{
+        params.model <- sapply(c("anc", "ms", "vs"), function(x) parameters.full[[x]])
+        params.boot <- matrix(unlist(sapply(fits.boot,
+                                            function(x) x[c('anc', 'ms', 'vs')])),
+                              nrow = 3,
+                              dimnames=list(c('anc', 'ms', 'vs'), c()))
+
+      }
+
 
     }
 
@@ -59,13 +70,17 @@ BiasCorrect <- function(n, true, parameters, models, N = 1000, ic = 'AIC'){
                                           function(x) x[c('theta', 'omega')])),
                                    nrow = 2,
                                    dimnames=list(c('theta','omega'),c()))
+
     }
     if(p == 1){
       param.boot <- params.boot %>% mean
     } else{
       param.boot <- params.boot%>% rowMeans
       if (class(true)[2] =="paleoStasis"){
-        param.boot['omega'] = max(param.boot['omega'], 0.001)
+        param.boot['omega'] = min(param.boot['omega'], 0.01)
+      }
+      if (class(true)[2] =="paleoGRW"){
+        param.boot['vs'] = min(param.boot['vs'], 0.01)
       }
     }
     param.corrected =  as.list(params.model-param.boot)
@@ -74,6 +89,7 @@ BiasCorrect <- function(n, true, parameters, models, N = 1000, ic = 'AIC'){
     param.corrected$ns = parameters.full$ns
     param.corrected$tt = parameters.full$tt
 
+    if("ms" %in% names(true$fixed.parameters)) param.corrected$ms=0
     return(structure(list(parameters = param.corrected, data = newdata),
                      class = 'ecicBiasCorrect'))
   }

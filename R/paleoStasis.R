@@ -79,7 +79,7 @@ EstimateParameters.paleoStasis = function(model, data){
   #              length(data), ".", sep = ""))
   # }
   pop.var= pool.var(data)
-  paramStasis = fitSimple(data, "Stasis")$parameters
+  paramStasis = fitSimple(data, "Stasis", pool=FALSE)$parameters
   parameters = list()
   parameters$theta = unname(paramStasis['theta'])
   parameters$omega = unname(paramStasis['omega'])
@@ -101,7 +101,7 @@ logLik.paleoStasis <- function(model, data, compress = F ){
   #              length(data), ".", sep = ""))
   # }
   pop.var= pool.var(data)
-  fitStasis = fitSimple(data, "Stasis")
+  fitStasis = fitSimple(data, "Stasis",pool=FALSE)
   paramStasis = fitStasis$parameters
   parameters = list()
   parameters$theta = unname(paramStasis['theta'])

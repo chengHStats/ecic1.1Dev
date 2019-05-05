@@ -361,7 +361,7 @@ GenerateDataBest <- function(n, true, parameters, best, models, N, ic = 'AIC', .
       ics <- sapply(scores, function(x) sapply(x, function(y) y$ic))
       mins <- apply(ics,1,which.min)
       data.best <- data[mins==best.ix]
-      data.best2 <- cbind(data.best2, data.best)
+      data.best2 <- c(data.best2, data.best)
       it <- it + 1
     }
     if(length(data.best2) > N) out <- data.best2[1:N]

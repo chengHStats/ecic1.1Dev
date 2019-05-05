@@ -47,6 +47,7 @@ IC.AIC <- function(model, data, ic = 'AIC', compress = F){
   IC = -2*logl$log.likelihood + 2*k
   out = list(ic=IC, parameters = logl$parameters)
   #names(out) = c('AIC', model$parameter.names)
+  return(out)
 }
 
 # ICMulti ----------------------------------------------------------------------
