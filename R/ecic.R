@@ -86,6 +86,7 @@ ECIC = function(models, data, alpha = c(0.01, 0.05, 0.1), N = 1000, ic = 'AIC', 
     }
   )
   ecic.thresholds = lapply(ecic.thresholds, function(x)  sapply(x, function(y) ifelse(is.na(y), 0, y)))
+  ecic.thresholds = lapply(ecic.thresholds, function(x)  sapply(x, function(y) ifelse(length(y) == 0, 0, y)))
 
   names(ecic.thresholds) = alpha
 
