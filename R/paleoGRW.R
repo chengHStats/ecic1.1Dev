@@ -94,9 +94,8 @@ EstimateParameters.paleoGRW = function(model, data){
           message("used MLE")
           fitGRW = list()
           fitGRW$parameters = list()
+          fitGRW$parameters['vstep'] = 0
           fitGRW$parameters['vstep'] = mle.URW(data)['vstep']
-          if (is.null(fitGRW$parameters['vstep'])) fitGRW$parameters['vstep'] = 0.01
-
           if (fitGRW$parameters['vstep'] <= 0) fitGRW$parameters['vstep'] = 0.01
           fitGRW$parameters['anc'] = data$mm[1]
 
@@ -116,6 +115,7 @@ EstimateParameters.paleoGRW = function(model, data){
         message("used MLE")
         fitGRW = list()
         fitGRW$parameters = list()
+        fitGRW$parameters['vstep'] = 0
         fitGRW$parameters['vstep'] = mle.GRW(data)['vstep']
         if (is.null(fitGRW$parameters['vstep'])) fitGRW$parameters['vstep'] = 0.01
 
@@ -167,6 +167,7 @@ logLik.paleoGRW <- function(model, data, compress = F ){
           message("used MLE")
           fitGRW = list()
           fitGRW$parameters = list()
+          fitGRW$parameters['vstep'] = 0
 
           fitGRW$parameters['vstep'] = mle.URW(data)['vstep']
           if (is.null(fitGRW$parameters['vstep'])) fitGRW$parameters['vstep'] = 0.01
@@ -190,6 +191,7 @@ logLik.paleoGRW <- function(model, data, compress = F ){
           message("used MLE")
           fitGRW = list()
           fitGRW$parameters = list()
+          fitGRW$parameters['vstep'] = 0
 
           fitGRW$parameters['vstep'] = mle.GRW(data)['vstep']
           if (is.null(fitGRW$parameters['vstep'])) fitGRW$parameters['vstep'] = 0.01
