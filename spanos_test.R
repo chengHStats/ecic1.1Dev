@@ -10,7 +10,7 @@ spanos.3 = ecicModel(lm.spanos.3, "spanos.3")
 
 models.spanos = ecicModelList(list(spanos.1, spanos.3))
 
-parameters = EstimateParameters(spanos.1, spanos.y)$parameters
+parameters = EstimateParameters(spanos.1, spanos$y)$parameters
 data.spanos = GenerateData(35, spanos.1, parameters)
 
 

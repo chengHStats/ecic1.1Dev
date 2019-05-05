@@ -79,10 +79,34 @@ EstimateParameters.paleoGRW = function(model, data){
   #              length(data), ".", sep = ""))
   # }
   pop.var= pool.var(data)
-  paramGRW = fitSimple(data, "GRW")$parameters
   parameters = list()
-  parameters$anc = unname(paramGRW['anc'])
+
+  if ("ms" %in% names(model$fixed.parameters)) {
+
+
+    fitGRW <- NULL
+    attempt <- 1
+    while( is.null(fitGRW) && attempt <= 5 ) {
+      attempt <- attempt + 1
+      try(
+        fitGRW <- fitSimple(data, "URW", pool = FALSE)
+      )
+    }
+
+    paramGRW = fitGRW$parameters
+  } else {
+  fitGRW <- NULL
+  attempt <- 1
+  while( is.null(fitGRW) && attempt <= 5 ) {
+    attempt <- attempt + 1
+    try(
+      fitGRW <- fitSimple(data, "GRW", pool = FALSE)
+    )
+  }
+  paramGRW = fitGRW$parameters
   parameters$ms = unname(paramGRW['mstep'])
+  }
+  parameters$anc = unname(paramGRW['anc'])
   parameters$vs = unname(paramGRW['vstep'])
   parameters$vp = pop.var
   parameters$nn = data$nn
@@ -107,11 +131,33 @@ logLik.paleoGRW <- function(model, data, compress = F ){
   #              length(data), ".", sep = ""))
   # }
   pop.var= pool.var(data)
-  fitGRW = fitSimple(data, "GRW")
-  paramGRW = fitGRW$parameters
   parameters = list()
-  parameters$anc = unname(paramGRW['anc'])
+
+  if ("ms" %in% names(model$fixed.parameters)) {
+    fitGRW <- NULL
+    attempt <- 1
+    while( is.null(fitGRW) && attempt <= 5 ) {
+      attempt <- attempt + 1
+      try(
+        fitGRW <- fitSimple(data, "URW", pool = FALSE)
+      )
+    }
+    paramGRW = fitGRW$parameters
+
+  } else {
+    fitGRW <- NULL
+    attempt <- 1
+    while( is.null(fitGRW) && attempt <= 5 ) {
+      attempt <- attempt + 1
+      try(
+        fitGRW <- fitSimple(data, "GRW", pool = FALSE)
+      )
+    }
+  paramGRW = fitGRW$parameters
   parameters$ms = unname(paramGRW['mstep'])
+  }
+  paramGRW = fitGRW$parameters
+  parameters$anc = unname(paramGRW['anc'])
   parameters$vs = unname(paramGRW['vstep'])
   parameters$vp = pop.var
   parameters$nn = data$nn
@@ -139,3 +185,88 @@ logLikMulti.paleoGRW <- function(model, data, compress = F ){
   return(out)
 }
 
+
+mle.GRW = function (y)
+{
+  nn <- length(y$mm) - 1
+  tt <- (y$tt[nn + 1] - y$tt[1])/nn
+  eps <- 2 * pool.var(y)/round(median(y$nn))
+  dy <- diff(y$mm)
+  my <- mean(dy)
+  mhat <- my/tt
+  vhat <- (1/tt) * ((1/nn) * sum(dy^2) - my^2 - eps)
+  w <- c(mhat, vhat)
+  names(w) <- c("mstep", "vstep")
+  return(w)
+}
+
+
+opt.joint.GRW = function (y, pool = TRUE, cl = list(fnscale = -1), meth = "L-BFGS-B",
+          hess = FALSE)
+{
+  print("asdlkjfasdlfkj")
+  if (pool)
+    y <- pool.var(y, ret.paleoTS = TRUE)
+  if (y$tt[1] != 0)
+    stop("Initial time must be 0.  Use as.paleoTS() or read.paleoTS() to correctly process ages.")
+  p0 <- array(dim = 3)
+  p0[1] <- y$mm[1]
+  p0[2:3] <- mle.GRW(y)
+  if (p0[3] <= 0)
+    p0[3] <- 1e-05
+  names(p0) <- c("anc", "mstep", "vstep")
+  if (is.null(cl$ndeps))
+    cl$ndeps <- abs(p0/10000)
+  cl$ndeps[cl$ndeps == 0] <- 1e-08
+  cl$maxit <- 5
+  if (meth == "L-BFGS-B")
+    w <- optim(p0, fn = logL.joint.GRW, control = cl, method = meth,
+               lower = c(NA, NA, 5), hessian = hess, y = y)
+  else w <- optim(p0, fn = logL.joint.GRW, control = cl, method = meth,
+                  hessian = hess, y = y)
+  if (hess)
+    w$se <- sqrt(diag(-1 * solve(w$hessian)))
+  else w$se <- NULL
+  wc <- as.paleoTSfit(logL = w$value, parameters = w$par, modelName = "GRW",
+                      method = "Joint", K = 3, n = length(y$mm), se = w$se)
+  return(wc)
+}
+
+
+function (p, y)
+{
+  anc <- p[1]
+  ms <- p[2]
+  vs <- p[3]
+  n <- length(y$mm)
+  VV <- vs * outer(y$tt, y$tt, FUN = pmin)
+  diag(VV) <- diag(VV) + y$vv/y$nn
+  M <- rep(anc, n) + ms * y$tt
+  S <- dmnorm(y$mm, mean = M, varcov = VV, log = TRUE)
+  return(S)
+}
+
+
+mle.Stasis = function (y)
+{
+  ns <- length(y$mm)
+  vp <- pool.var(y)
+  th <- mean(y$mm[2:ns])
+  om <- var(y$mm[2:ns]) - vp/median(y$nn)
+  w <- c(th, om)
+  names(w) <- c("theta", "omega")
+  return(w)
+}
+
+mle.URW = function (y)
+{
+  nn <- length(y$mm) - 1
+  tt <- (y$tt[nn + 1] - y$tt[1])/nn
+  eps <- 2 * pool.var(y)/round(median(y$nn))
+  dy <- diff(y$mm)
+  my <- mean(dy)
+  vhat <- (1/tt) * ((1/nn) * sum(dy^2) - eps)
+  w <- vhat
+  names(w) <- "vstep"
+  return(w)
+}
