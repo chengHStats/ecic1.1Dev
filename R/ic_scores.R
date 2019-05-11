@@ -155,4 +155,16 @@ ICMultiMulti = function(models, data, ic = "AIC", compress = F){
 
 }
 
+#' @export
+AICweights = function(scores){
+  weights = function(row){
+    ex = sapply(row, function(x) exp(-0.5*x))
+    return(ex/sum(ex))
+  }
+  if (class(scores)=="matrix"){
+    return(t(apply(scores, 1, weights)))
+  } else {
+    return(weights(scores))
+  }
 
+}
