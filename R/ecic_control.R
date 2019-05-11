@@ -128,7 +128,9 @@ ecicControl = function(n, true, parameters,best, models, N = 1000, ic = 'AIC'){
     icmm <- ICMultiMulti(models, data2, ic)
     scores2 = sapply(icmm, function(x) sapply(x, function(y) y$ic))
     scores.full <- rbind(scores.keep,scores2)
-
+    weights.full = AICweights(scores.full)
+    ratio <- sort(weights.full[,best.ix] / apply(as.matrix(weights.full[,-best.ix]), 1, max),
+                  method = 'radix')
     params.true2 = lapply(icmm[[true.ix]], function(x) x$parameters)
     rownames(scores.full) <- NULL
     dif <- sort(scores.full[,best.ix] - apply(as.matrix(scores.full[,-best.ix]), 1, min),
