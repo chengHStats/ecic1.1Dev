@@ -13,9 +13,9 @@ parameters = EstimateParameters(grw, paleoData)
 ModelFrequencies(10, grw, parameters, models, 100)$frequencies
 data = GenerateData(6, grw, parameters)
 
-
+data = tslist[[1]]
   library(tictoc)
   tic()
-  paleoECICtest = ECIC(models, data, N=20)
+  paleoECICtest = ECIC(models, data, N=10)
   toc()
 
