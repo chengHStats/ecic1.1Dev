@@ -40,6 +40,7 @@ ECIC = function(models, data, alpha = c(0.01, 0.05, 0.1), N = 1000, ic = 'AIC', 
 
   obs = lapply(models, function(x) IC(x, data, ic)) #observed
 
+
   if (class(data)!= "paleoTS"){
   params.obs = lapply(obs, function(x) x$parameters)
   scores.obs = sapply(obs, function(x) x$ic)
@@ -49,13 +50,14 @@ ECIC = function(models, data, alpha = c(0.01, 0.05, 0.1), N = 1000, ic = 'AIC', 
     scores.obs = sapply(obs, function(x) x$ic)
 
   }
-
+  weights.obs = AICweights(scores.obs)
   best.ix = which.min(scores.obs)
   best = models[[best.ix]]
 
   alt.models = models[-best.ix]
 
   dif.obs = scores.obs[best.ix]-min(scores.obs[-best.ix])
+  ratio.obs = weights.obs[best.ix]/max(weights.obs[-best.ix])
   names(dif.obs) = best$ID
 
 
@@ -65,35 +67,45 @@ ECIC = function(models, data, alpha = c(0.01, 0.05, 0.1), N = 1000, ic = 'AIC', 
 
   icd = lapply(alt.models, function(x) ecicControl(n, x, bc[[x$ID]]$parameters, best, models, N, ic))
 
+
   best.freq = sapply(icd, function(x) x$frequencies$frequencies[best.ix])
   alpha.primes = lapply(alpha,
                         function(a)  sapply(best.freq, function(x) ifelse(x==0, 1, a/x)))
   alpha.primes = lapply(alpha.primes, function(x) sapply(x, function(a) min(a, 1)))
   alpha.primes.N = lapply(alpha.primes, function(x) round(x * N))
   differences = lapply(icd, function(x) x$differences)
+  ratios = lapply(icd, function(x) x$ratios)
+
   ecic.thresholds = lapply(alpha.primes, function(alpha.prime) {
     thresh = sapply(1:(p-1), function(x){
     try({
-    dif = differences[[x]]
-    dif.N = length(dif)
-    out = dif[ceiling(alpha.prime[x] * dif.N)]
-    if(alpha.prime[x] == 1) out = 0
+    # dif = differences[[x]]
+    # dif.N = length(dif)
+    # out = dif[ceiling(alpha.prime[x] * dif.N)]
+    # if(alpha.prime[x] == 1) out = 0
+    # out
+    ratio = ratios[[x]]
+    ratio.N = length(ratio)
+    out = ratio[floor(ratio.N - (alpha.prime[x] * ratio.N))]
+    if(alpha.prime[x] == 1) out = 1
     out
+
+
     })
     })
     names(thresh) = names(alt.models)
     thresh
     }
   )
-  ecic.thresholds = lapply(ecic.thresholds, function(x)  sapply(x, function(y) ifelse(is.na(y), 0, y)))
-  ecic.thresholds = lapply(ecic.thresholds, function(x)  sapply(x, function(y) ifelse(length(y) == 0, 0, y)))
+  ecic.thresholds = lapply(ecic.thresholds, function(x)  sapply(x, function(y) ifelse(is.na(y), 1, y)))
+  ecic.thresholds = lapply(ecic.thresholds, function(x)  sapply(x, function(y) ifelse(length(y) == 0, 1, y)))
 
   names(ecic.thresholds) = alpha
 
-  decision.ecic = sapply(ecic.thresholds, function(thresh) ifelse(dif.obs < min(thresh),
+  decision.ecic = sapply(ecic.thresholds, function(thresh) ifelse(dif.obs > max(thresh),
                           best$ID, "No Decision")%>%unname)
 
-  decision.ba = ifelse(dif.obs < -2,
+  decision.ba = ifelse(ratio.obs > 2.7,
                        best$ID, "No Decision")%>%unname
 
 
@@ -106,6 +118,7 @@ ECIC = function(models, data, alpha = c(0.01, 0.05, 0.1), N = 1000, ic = 'AIC', 
         thresholds = ecic.thresholds),
       observed = list(delta = dif.obs,
         scores = scores.obs,
+        ratio = ratio.obs,
         parameters = lapply(bc, function(x) x$parameters),
         data = data
       )%>% structure(class = c("ecicDecisions")),

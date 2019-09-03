@@ -87,6 +87,11 @@ ecicControl = function(n, true, parameters,best, models, N = 1000, ic = 'AIC'){
   rownames(scores.full) <- NULL
   dif <- sort(scores.full[,best.ix] - apply(as.matrix(scores.full[,-best.ix]), 1, min),
               method = 'radix')
+
+  weights.full <- AICweights(scores.full)
+  ratio <- sort(weights.full[,best.ix] / apply(as.matrix(weights.full[,-best.ix]), 1, max),
+         method = 'radix')
+
   #if(!is.null(params.full)){
   params.full = NULL
   if(!is.null(params.true)){
@@ -123,7 +128,9 @@ ecicControl = function(n, true, parameters,best, models, N = 1000, ic = 'AIC'){
     icmm <- ICMultiMulti(models, data2, ic)
     scores2 = sapply(icmm, function(x) sapply(x, function(y) y$ic))
     scores.full <- rbind(scores.keep,scores2)
-
+    weights.full = AICweights(scores.full)
+    ratio <- sort(weights.full[,best.ix] / apply(as.matrix(weights.full[,-best.ix]), 1, max),
+                  method = 'radix')
     params.true2 = lapply(icmm[[true.ix]], function(x) x$parameters)
     rownames(scores.full) <- NULL
     dif <- sort(scores.full[,best.ix] - apply(as.matrix(scores.full[,-best.ix]), 1, min),
@@ -138,7 +145,7 @@ ecicControl = function(n, true, parameters,best, models, N = 1000, ic = 'AIC'){
 
     }
   }
-  return(structure(list(differences = dif,
+  return(structure(list(differences = dif, ratios = ratio,
               est.parameters = params.full, scores = scores.full,
               data.control = data.full, frequencies = mf1),
               class = 'ecicControl'))
