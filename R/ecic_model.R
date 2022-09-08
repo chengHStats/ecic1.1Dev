@@ -116,7 +116,7 @@ ecicModelList = function(models = list()){
                  stop(paste(x, "is not a valid ecicModel type."),
                       call. = FALSE)
                })
-    } else if (class(x)[1] == "ecicModel"){
+    } else if (inherits(x, "ecicModel")){
       x
     }
     else{
