@@ -54,7 +54,7 @@ BiasCorrect <- function(n, true, parameters, models, N = 1000, ic = 'AIC', genBe
 
     }
     fits.boot <- suppressMessages(EstimateParametersMulti(true, newdata))
-    if (inherits(true,"paleoGRW"){
+    if (inherits(true,"paleoGRW")){
       if ("ms" %in% names(true$fixed.parameters)){
         params.model <- sapply(c("anc", "vs"), function(x) parameters.full[[x]])
         params.boot <- matrix(unlist(sapply(fits.boot,
@@ -74,7 +74,7 @@ BiasCorrect <- function(n, true, parameters, models, N = 1000, ic = 'AIC', genBe
 
     }
 
-    if (inherits(true,"paleoStasis"){
+    if (inherits(true,"paleoStasis")){
       params.model <- sapply(c("theta", "omega"), function(x) parameters.full[[x]])
       params.boot <- matrix(unlist(sapply(fits.boot,
                                           function(x) x[c('theta', 'omega')])),
@@ -86,10 +86,10 @@ BiasCorrect <- function(n, true, parameters, models, N = 1000, ic = 'AIC', genBe
       param.boot <- params.boot %>% mean
     } else{
       param.boot <- params.boot%>% rowMeans
-      if (inherits(true,"paleoStasis"){
+      if (inherits(true,"paleoStasis")){
         param.boot['omega'] = min(param.boot['omega'], 0.01)
       }
-      if (inherits(true,"paleoGRW"){
+      if (inherits(true,"paleoGRW")){
         param.boot['vs'] = min(param.boot['vs'], 0.01)
       }
     }
