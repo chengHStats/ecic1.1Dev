@@ -41,9 +41,9 @@ ECIC = function(models, data, alpha = c(0.01, 0.05, 0.1), N = 1000, ic = 'AIC', 
   obs = lapply(models, function(x) IC(x, data, ic)) #observed
 
 
-  if (class(data)!= "paleoTS"){
-  params.obs = lapply(obs, function(x) x$parameters)
-  scores.obs = sapply(obs, function(x) x$ic)
+  if (class(data)!= "paleoTS") {
+    params.obs = lapply(obs, function(x) x$parameters)
+    scores.obs = sapply(obs, function(x) x$ic)
   } else {
     n = length(data$nn)
     params.obs = lapply(obs, function(x) x$parameters)
