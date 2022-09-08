@@ -33,7 +33,7 @@ IC <- function(model, data, ic = 'AIC', compress = F){
                              call. = FALSE)
                       })
     IC(model1, data, ic, compress)
-  } else if (inherits(model, "ecicModel"){
+  } else if (inherits(model, "ecicModel")){
   UseMethod("IC", ic)
   } else {
     stop("Unexpected input for model in IC function.", call. = FALSE)
@@ -72,7 +72,7 @@ ICMulti <- function(model, data, ic = "AIC"){
                                call. = FALSE)
                         })
       ICMulti(model1, data, ic)
-    } else if (inherits(model, "ecicModel"){
+    } else if (inherits(model, "ecicModel")){
       UseMethod("ICMulti", ic)
     } else {
       stop("Unexpected input for model in ICMulti function.", call. = FALSE)
@@ -92,7 +92,7 @@ ICMulti.AIC <- function(model, data, ic){
   # Returns:
   #   ic: the criterion value for the given data samples
   #   param: the fitted model parameters, which are an intermediate step
-  if (inherits(data,"matrix"){
+  if (inherits(data,"matrix")){
   x <- logLikMulti(model, data)
   liks = x$log.likelihood
   parameters = x$parameters
@@ -100,8 +100,8 @@ ICMulti.AIC <- function(model, data, ic){
   out = list(ic = ic, parameters = parameters)
   return(out)
 }
-  if (inherits(data,"list"){
-    if (inherits(data[[1]],"paleoTS"){
+  if (inherits(data,"list")){
+    if (inherits(data[[1]],"paleoTS")){
       fits <- logLikMulti(model, data)
       out = c()
       for (fit in fits){
@@ -127,7 +127,7 @@ ICMulti.AIC <- function(model, data, ic){
 #'
 #' @export
 ICMultiMulti = function(models, data, ic = "AIC", compress = F){
-  if (inherits(data,"matrix"){
+  if (inherits(data,"matrix")){
     models = ecicModelList(models)
     p = length(models)
     data.type = models[[1]]$data.type
@@ -144,8 +144,8 @@ ICMultiMulti = function(models, data, ic = "AIC", compress = F){
     return(out)
     }
   }
-    if (inherits(data,"list"){
-      if (inherits(data,"paleoTS"){
+    if (inherits(data,"list")){
+      if (inherits(data,"paleoTS")){
         out = lapply(models, function(model) ICMulti(model, data))
         return(out)
       }
@@ -161,7 +161,7 @@ AICweights = function(scores){
     ex = sapply(row, function(x) exp(-0.5*x))
     return(ex/sum(ex))
   }
-  if (inherits(scores,"matrix"){
+  if (inherits(scores,"matrix")){
     return(t(apply(scores, 1, weights)))
   } else {
     return(weights(scores))

@@ -20,7 +20,7 @@ ModelFrequencies <- function(n, true, parameters, models, N = 1000, ic = 'AIC'){
   data <- GenerateDataMulti(n, true, parameters, N)
   icmm <- ICMultiMulti(models, data, ic)
 
-  if (inherits(data,"matrix"){
+  if (inherits(data,"matrix")){
   scores = icmm$ic
 
   freqs = table(
@@ -33,8 +33,8 @@ ModelFrequencies <- function(n, true, parameters, models, N = 1000, ic = 'AIC'){
                         true = true),
                    class = "ecicFrequencies"))
   }
-  if (inherits(data,"list"){
-    if (inherits(data,"paleoTS"){
+  if (inherits(data,"list")){
+    if (inherits(data,"paleoTS")){
       scores = sapply(icmm, function(x) sapply(x, function(y) y$ic))
       freqs = table(
         factor(apply(scores,1,function(x) names(models)[which.min(x)]),
