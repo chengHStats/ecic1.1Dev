@@ -45,7 +45,7 @@ ECIC = function(models, data, alpha = c(0.01, 0.05, 0.1), N = 1000, ic = 'AIC', 
     params.obs = lapply(obs, function(x) x$parameters)
     scores.obs = sapply(obs, function(x) x$ic)
   } else {
-    n = length(data$nn)
+    n = length(data$nn) ## potential bug here since n is already set to length(data) before the if-else condition
     params.obs = lapply(obs, function(x) x$parameters)
     scores.obs = sapply(obs, function(x) x$ic)
 
@@ -56,8 +56,8 @@ ECIC = function(models, data, alpha = c(0.01, 0.05, 0.1), N = 1000, ic = 'AIC', 
 
   alt.models = models[-best.ix]
 
-  dif.obs = scores.obs[best.ix]-min(scores.obs[-best.ix])
-  ratio.obs = weights.obs[best.ix]/max(weights.obs[-best.ix])
+  dif.obs = scores.obs[best.ix]-min(scores.obs[-best.ix]) #take the score of the best model and subtract the best remaining score (where smaller is better)
+  ratio.obs = weights.obs[best.ix]/max(weights.obs[-best.ix]) #take the ratio of the observed best model's Akaike weight to the next best Akaike weight
   names(dif.obs) = best$ID
 
 
