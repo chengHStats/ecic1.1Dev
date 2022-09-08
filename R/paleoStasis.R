@@ -70,7 +70,7 @@ GenerateData.paleoStasis <- function(n, model, parameters){
 
 #' @export
 EstimateParameters.paleoStasis = function(model, data){
-  if(class(data)!="paleoTS"){
+  if(!inherits(data,"paleoTS"){
     stop(paste("Data is not of class paleoTS"))
   }
   # if(length(data$mm) != model$nn){
@@ -105,7 +105,7 @@ EstimateParameters.paleoStasis = function(model, data){
 
 #' @export
 logLik.paleoStasis <- function(model, data, compress = F ){
-  if(class(data)!="paleoTS"){
+  if(!inherits(data,"paleoTS"){
     stop(paste("Data is not of class paleoTS"))
   }
   # if(length(data$mm) != model$nn){
@@ -143,7 +143,7 @@ logLik.paleoStasis <- function(model, data, compress = F ){
 
 #' @export
 logLikMulti.paleoStasis <- function(model, data, compress = F ){
-  if(class(data[[1]])!="paleoTS"){
+  if(!inherits(data,"paleoTS"){
     stop(paste("Data is not of class paleoTS"))
   }
   # if(length(data$mm) != model$nn){

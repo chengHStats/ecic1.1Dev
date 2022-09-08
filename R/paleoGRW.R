@@ -70,7 +70,7 @@ GenerateDataMulti.paleoGRW <- function(n, model, parameters, N){
 
 #' @export
 EstimateParameters.paleoGRW = function(model, data){
-  if(class(data)!="paleoTS"){
+  if(!inherits(data,"paleoTS"){
     stop(paste("Data is not of class paleoTS"))
   }
   # if(length(data$mm) != model$nn){
@@ -147,7 +147,7 @@ EstimateParametersMulti.paleoGRW <- function(model, data, ...){
 
 #' @export
 logLik.paleoGRW <- function(model, data, compress = F ){
-  if(class(data)!="paleoTS"){
+  if(!inherits(data,"paleoTS"){
     stop(paste("Data is not of class paleoTS"))
   }
   # if(length(data$mm) != model$nn){
@@ -229,7 +229,7 @@ logLik.paleoGRW <- function(model, data, compress = F ){
 #' @export
 logLikMulti.paleoGRW <- function(model, data, compress = F ){
   for(data_ in data ){
-  if(class(data_)!="paleoTS"){
+  if(!inherits(data_,"paleoTS"){
     stop(paste("Data is not of class paleoTS"))
   }
   }
