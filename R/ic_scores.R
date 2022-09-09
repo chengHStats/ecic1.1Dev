@@ -50,6 +50,17 @@ IC.AIC <- function(model, data, ic = 'AIC', compress = F){
   return(out)
 }
 
+#' @export
+IC.BIC <- function(model, data, ic = 'BIC', compress = F){
+  logl <- logLik(model, data)
+  k = model$k
+  n = model$n
+  IC = -2*logl$log.likelihood + k*log(n)
+  out = list(ic=IC, parameters = logl$parameters)
+  #names(out) = c('BIC', model$parameter.names)
+  return(out)
+}
+
 # ICMulti ----------------------------------------------------------------------
 #' Computes an information criterion for many data samples and specified model.
 #'
@@ -106,6 +117,40 @@ ICMulti.AIC <- function(model, data, ic){
       out = c()
       for (fit in fits){
         fit$ic = -2*fit$log.likelihood + 2*model$k
+        out = c(out, list(fit))
+      }
+      out
+    }
+  }
+}
+
+#' @export
+ICMulti.BIC <- function(model, data, ic){
+  # Computes the Akaike information criterion for many datasets and a model.
+  #
+  # Args:
+  #   data: A matrix/array of data samples compatible with the specified model.
+  #   model: A string specifying the model to fit and compute the score for
+  #   ic: which information criterion (e.g. AIC, AICc, BIC)
+  #   compress: boolean specifying if output should be of list or vector type
+  #
+  # Returns:
+  #   ic: the criterion value for the given data samples
+  #   param: the fitted model parameters, which are an intermediate step
+  if (inherits(data,"matrix")){
+  x <- logLikMulti(model, data)
+  liks = x$log.likelihood
+  parameters = x$parameters
+  ic <- (-2*liks)+model$k*log(model$n)
+  out = list(ic = ic, parameters = parameters)
+  return(out)
+}
+  if (inherits(data,"list")){
+    if (inherits(data[[1]],"paleoTS")){
+      fits <- logLikMulti(model, data)
+      out = c()
+      for (fit in fits){
+        fit$ic = -2*fit$log.likelihood + model$k*log(model$n)
         out = c(out, list(fit))
       }
       out
