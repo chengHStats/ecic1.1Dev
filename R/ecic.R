@@ -39,7 +39,7 @@ ECIC = function(models, data, alpha = c(0.01, 0.05, 0.1), N = 1000, ic = 'AIC', 
   models = ecicModelList(models)
   # store the number of models in the model set
   p <- length(models)
-  # store the number of data sets inputted
+  # store the number of observed data points
   n <- length(data)
   # compute the information criterion value for each model... outputs list of IC value and MLE parameters 
   obs = lapply(models, function(x) IC(x, data, ic)) #observed
