@@ -3,27 +3,29 @@ length.paleoTS = function(data){
 }
 #' Perform the Error Control for Information Criteria (ECIC) Procedure.
 #'
-#' @param data: A vector/matrix data samplecompatible with the specified models.
-#' @param model: A string vector specifying the models to use.
+#' @param data: A vector/matrix data sample compatible with the specified models.
+#' @param models: A string vector specifying the models to use.
+#' @param alpha: A vector of desired type 1 error rates 
 #'
 #' @return An ecic object with the following attributes:
-#'    \code{decisions:  }A dataframe containing the results of the ECIC procedure, along
+
+#'    \code{decisions:  }A dataframe containing the results of the ECIC procedure along
 #'    with the decisions given by the best scoring model and the Burnham &
-#'    Anderson (BA) rule (accept best model if delta < -10).
+#'    Anderson (BA) rule (accept best model if delta < -10)
 #'
-#'    \code{observed:  } an ecicObserved object containing the observed IC delta,
+#'    \code{observed:  } An ecicObserved object containing the observed IC delta,
 #'    the information criterion values for each model given the data, fitted
-#'    parameters for each model, and the observed data itself.
+#'    parameters for each model, and the observed data itself
 #'
 #'    \code{bias.correction:  }An ecicBias object containing the corrected model
-#'    parameters and the data used for the bias correction procedure.
+#'    parameters and the data used for the bias correction procedure
 #'
-#'    \code{error.control:  } A list of ecicControl objects corresponding to each
-#'    alternative model. Each ecicControl object contains information related
+#'    \code{error.control:  }A list of ecicControl objects corresponding to each
+#'    alternative model where each ecicControl object contains information related
 #'    to the error control bootstrap procedure: a vector of model bootstrap
 #'    frequencies, a vector of bootstrap IC deltas, estimated parameters
 #'    corresponding to each bootstrap sample, a matrix of model scores, and the
-#'    bootstrap data itself.
+#'    bootstrap data itself
 #'
 #'
 #' @examples
