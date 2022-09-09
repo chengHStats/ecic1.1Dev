@@ -35,33 +35,40 @@ length.paleoTS = function(data){
 #'
 #' @export
 ECIC = function(models, data, alpha = c(0.01, 0.05, 0.1), N = 1000, ic = 'AIC', genBest = TRUE){
+  # create an ecicModelList object out of the model set provided as input
   models = ecicModelList(models)
+  # store the number of models in the model set
   p <- length(models)
-
+  # store the number of data sets inputted
   n <- length(data)
-
+  # compute the information criterion value for each model... outputs list of IC value and MLE parameters 
   obs = lapply(models, function(x) IC(x, data, ic)) #observed
-
-
-  if (!inherits(data, "paleoTS")) {
-    params.obs = lapply(obs, function(x) x$parameters)
-    scores.obs = sapply(obs, function(x) x$ic)
-  } else {
+  # what does inherits do exactly?? (ask Beckett)
+  if (!inherits(data, "paleoTS")) 
+  {
+    params.obs = lapply(obs, function(x) x$parameters) # extract the MLE parameters for each model in the model set
+    scores.obs = sapply(obs, function(x) x$ic) # extract the IC value for each model in the model set
+  } 
+  else 
+  {
     n = length(data$nn) ## potential bug here since n is already set to length(data) before the if-else condition
     params.obs = lapply(obs, function(x) x$parameters)
     scores.obs = sapply(obs, function(x) x$ic)
-
   }
+  # compute AIC weights (for Burnham and Anderson's rule of thumb approach) for each model in the model set
   weights.obs = AICweights(scores.obs)
+  # determine which index holds the model with the lowest IC value
   best.ix = which.min(scores.obs)
+  # use index to store the model with the lowest IC value 
   best = models[[best.ix]]
-
+  # create a new model set without the model with the lowest IC value
   alt.models = models[-best.ix]
-
-  dif.obs = scores.obs[best.ix]-min(scores.obs[-best.ix]) #take the score of the best model and subtract the best remaining score (where smaller is better)
-  ratio.obs = weights.obs[best.ix]/max(weights.obs[-best.ix]) #take the ratio of the observed best model's Akaike weight to the next best Akaike weight
+  # take the score of the best model and subtract the best remaining score (where smaller is better)
+  dif.obs = scores.obs[best.ix]-min(scores.obs[-best.ix]) 
+  # take the ratio of the observed best model's Akaike weight to the next best Akaike weight
+  ratio.obs = weights.obs[best.ix]/max(weights.obs[-best.ix]) 
+  # store the name of the best model (as selected by using the lowest IC value) as the name of dif.obs
   names(dif.obs) = best$ID
-
 
   bc = lapply(alt.models, function(x)
     BiasCorrect(n, x, params.obs[[x$ID]],
