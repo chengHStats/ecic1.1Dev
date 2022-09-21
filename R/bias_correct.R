@@ -15,93 +15,82 @@
 #' ecic = ECIC(data, models, alpha = 0.05, N = 100, ic = "AIC", correct = T)
 #'
 #' @export
-BiasCorrect <- function(n, true, parameters, models, N = 1000, ic = 'AIC', genBest = TRUE){
+BiasCorrect <- function(n, true.model, parameters, models, N = 1000, ic = 'AIC', genBest = TRUE)
+{
   # Corrects biased parameter estimates stemming from partitioning by best model
-  # ISSUE: "true" is a bad variable name. It should be updated to true.model or something like that
-  parameters.full = parameterCheck(true, parameters)
+  # checks for consistency for parameters and model input
+  parameters.full = parameterCheck(true.model, parameters)
   models = ecicModelList(models)
-  if (true$data.type==1){
-  p = length(true$parameter.names)
-  true.ix = which(names(models) == true$ID)
-  if(p > 0){
-    if (genBest){
-    newdata <- GenerateDataBest(n, true, parameters, true, models, N)
-    } else {
-      newdata <- suppressMessages(GenerateDataMulti(n, true, parameters, true, models, N))
-
+  if(true.model$data.type==1)
+  {
+    p = length(true.model$parameter.names)
+    true.model.ix = which(names(models) == true.model$ID)
+    if(p > 0)
+    {
+      if (genBest)
+        newdata <- GenerateDataBest(n, true.model, parameters, true.model, models, N)
+      else
+        newdata <- suppressMessages(GenerateDataMulti(n, true.model, parameters, true.model, models, N))
+      params.boot = suppressMessages(EstimateParametersMulti(true.model, newdata)$parameters)
+      if(p == 1)
+        param.boot <- params.boot %>% mean
+      else
+        param.boot <- params.boot%>% rowMeans
+      param.corrected = 2*unlist(parameters.full)[true.model$parameter.names]-param.boot
+      return(structure(list(parameters = param.corrected, data = newdata),class = 'ecicBiasCorrect'))
     }
-    params.boot = suppressMessages(EstimateParametersMulti(true, newdata)$parameters)
-
-    if(p == 1){
-      param.boot <- params.boot %>% mean
-    } else{
-      param.boot <- params.boot%>% rowMeans
-    }
-    param.corrected = 2*unlist(parameters.full)[true$parameter.names]-param.boot
-    return(structure(list(parameters = param.corrected, data = newdata),
-                     class = 'ecicBiasCorrect'))
   }
-  }
-  if (true$data.type=="paleoTS"){
-  p = true$k
-  parameters.full = parameterCheck(true, parameters)
-
-  if(p > 0){
-    if (genBest){
-      newdata <- suppressMessages(GenerateDataBest(n, true, parameters, true, models, N))
-    } else {
-      newdata <- suppressMessages(GenerateDataMulti(n, true, parameters, true, models, N))
-
-    }
-    fits.boot <- suppressMessages(EstimateParametersMulti(true, newdata))
-    if (inherits(true,"paleoGRW")){
-      if ("ms" %in% names(true$fixed.parameters)){
-        params.model <- sapply(c("anc", "vs"), function(x) parameters.full[[x]])
-        params.boot <- matrix(unlist(sapply(fits.boot,
-                                            function(x) x[c('anc', 'vs')])),
-                              nrow = 2,
-                              dimnames=list(c('anc', 'vs'), c()))
-
-      }else{
-        params.model <- sapply(c("anc", "ms", "vs"), function(x) parameters.full[[x]])
-        params.boot <- matrix(unlist(sapply(fits.boot,
-                                            function(x) x[c('anc', 'ms', 'vs')])),
-                              nrow = 3,
-                              dimnames=list(c('anc', 'ms', 'vs'), c()))
-
+  if(true.model$data.type=="paleoTS")
+  {
+    p = true.model$k
+    parameters.full = parameterCheck(true.model, parameters)
+    if(p > 0)
+    {
+      if(genBest)
+        newdata <- suppressMessages(GenerateDataBest(n, true.model, parameters, true.model, models, N))
+      else 
+        newdata <- suppressMessages(GenerateDataMulti(n, true.model, parameters, true.model, models, N))
+      fits.boot <- suppressMessages(EstimateParametersMulti(true.model, newdata))
+      if(inherits(true.model,"paleoGRW"))
+      {
+        if("ms" %in% names(true.model$fixed.parameters))
+        {
+          params.model <- sapply(c("anc", "vs"), function(x) parameters.full[[x]])
+          params.boot <- matrix(unlist(sapply(fits.boot,function(x) x[c('anc', 'vs')])),
+                              nrow = 2,dimnames=list(c('anc', 'vs'), c()))
+        }
+        else
+        {
+          params.model <- sapply(c("anc", "ms", "vs"), function(x) parameters.full[[x]])
+          params.boot <- matrix(unlist(sapply(fits.boot,function(x) x[c('anc', 'ms', 'vs')])),
+                                nrow = 3,dimnames=list(c('anc', 'ms', 'vs'), c()))
+        }
       }
-
-
-    }
-
-    if (inherits(true,"paleoStasis")){
-      params.model <- sapply(c("theta", "omega"), function(x) parameters.full[[x]])
-      params.boot <- matrix(unlist(sapply(fits.boot,
-                                          function(x) x[c('theta', 'omega')])),
-                                   nrow = 2,
-                                   dimnames=list(c('theta','omega'),c()))
-
-    }
-    if(p == 1){
-      param.boot <- params.boot %>% mean
-    } else{
-      param.boot <- params.boot%>% rowMeans
-      if (inherits(true,"paleoStasis")){
-        param.boot['omega'] = min(param.boot['omega'], 0.01)
+      if (inherits(true.model,"paleoStasis"))
+      {
+        params.model <- sapply(c("theta", "omega"), function(x) parameters.full[[x]])
+        params.boot <- matrix(unlist(sapply(fits.boot,function(x) x[c('theta', 'omega')])),
+                                    nrow = 2,dimnames=list(c('theta','omega'),c()))
       }
-      if (inherits(true,"paleoGRW")){
-        param.boot['vs'] = min(param.boot['vs'], 0.01)
+      if(p == 1)
+        param.boot <- params.boot %>% mean
+      else
+      {
+        param.boot <- params.boot%>% rowMeans
+        if(inherits(true.model,"paleoStasis"))
+          param.boot['omega'] = min(param.boot['omega'], 0.01)
+        if(inherits(true.model,"paleoGRW"))
+          param.boot['vs'] = min(param.boot['vs'], 0.01)
       }
-    }
     param.corrected =  as.list(params.model-param.boot)
     param.corrected$vp = parameters.full$vp
     param.corrected$nn = parameters.full$nn
     param.corrected$ns = parameters.full$ns
     param.corrected$tt = parameters.full$tt
-
-    if("ms" %in% names(true$fixed.parameters)) param.corrected$ms=0
+    if("ms" %in% names(true.model$fixed.parameters)) 
+      param.corrected$ms=0
     return(structure(list(parameters = param.corrected, data = newdata),
                      class = 'ecicBiasCorrect'))
-  }
+    }
   }
 }
