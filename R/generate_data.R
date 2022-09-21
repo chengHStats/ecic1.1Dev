@@ -289,11 +289,11 @@ GenerateDataMultiOld <- function(n, model, parameters, N){
 }
 
 # Generate data samples with a given best performing model ---------------------
-#' Generate multiple samples from a fitted model with specified best performing
+#' Generate multiple samples from a fitted model with a specified best performing
 #' model
 #'
 #' @param n: Sample size.
-#' @param true: A string giving the name of the model to generate data from.
+#' @param true.model: A string giving the name of the model to generate data from.
 #' @param param: A vector of parameters specifying a fitted true model.
 #' @param best: A string giving the name of the model to be given as best.
 #' @param models: A string vector of model names for selecting between.
@@ -305,33 +305,33 @@ GenerateDataMultiOld <- function(n, model, parameters, N){
 #' @examples
 #' GenerateData(25, "norm", c(mu = 0.3, sd = 1.2))
 #' @export
-GenerateDataBest <- function(n, true, parameters, best, models, N, ic = 'AIC', ...){
+GenerateDataBest <- function(n, true.model, parameters, best.model, models, N, ic = 'AIC', ...){
   models = ecicModelList(models)
-  best.id = best$ID
-  true.id = true$ID
+  best.model.id = best.model$ID
+  true.model.id = true.model$ID
   if (models[[1]]$data.type==1){
-    check <- suppressMessages(GenerateData(n, models[[true.id]], parameters))
+    check <- suppressMessages(GenerateData(n, models[[true.model.id]], parameters))
 
   if(is.numeric(check)){
     mins <- 0
-    best.ix <- which(names(models)==best.id)
+    best.model.ix <- which(names(models)==best.model.id)
     it1 <- 0
     nonzero <- FALSE
-    while(!(best.ix %in% mins) &  it1 < 1000){
-      data <- suppressMessages(GenerateDataMulti(n, models[[true.id]], parameters, N*3))
+    while(!(best.model.ix %in% mins) &  it1 < 1000){
+      data <- suppressMessages(GenerateDataMulti(n, models[[true.model.id]], parameters, N*3))
       scores <- ICMultiMulti(models, data, ic)$ic
       mins <- apply(scores,1,which.min)
-      data.best2 <- as.matrix(data[,mins==best.ix])
-      if(best.ix %in% mins) nonzero <- TRUE
+      data.best2 <- as.matrix(data[,mins==best.model.ix])
+      if(best.model.ix %in% mins) nonzero <- TRUE
       it1 <- it1 + N
     }
     if(!nonzero) return(NA)
     it <- 0
     while(dim(data.best2)[2] < N & it < 4){
-      data <- suppressMessages(GenerateDataMulti(n, models[[true.id]], parameters, N*3))
+      data <- suppressMessages(GenerateDataMulti(n, models[[true.model.id]], parameters, N*3))
       scores <- ICMultiMulti(models, data, ic)$ic
       mins <- apply(scores,1,which.min)
-      data.best <- data[,mins==best.ix]
+      data.best <- data[,mins==best.model.ix]
       data.best2 <- cbind(data.best2, data.best)
       it <- it + 1
     }
@@ -341,26 +341,26 @@ GenerateDataBest <- function(n, true, parameters, best, models, N, ic = 'AIC', .
   }
   if (models[[1]]$data.type=="paleoTS"){
     mins <- 0
-    best.ix <- which(names(models)==best.id)
+    best.model.ix <- which(names(models)==best.model.id)
     it1 <- 0
     nonzero <- FALSE
-    while(!(best.ix %in% mins) &  it1 < 1000){
-      data <- suppressMessages(GenerateDataMulti(n, models[[true.id]], parameters, N*3))
+    while(!(best.model.ix %in% mins) &  it1 < 1000){
+      data <- suppressMessages(GenerateDataMulti(n, models[[true.model.id]], parameters, N*3))
       fits <- ICMultiMulti(models, data, ic)
       ics <- sapply(fits, function(x) sapply(x, function(y) y$ic))
       mins <- apply(ics,1,which.min)
-      data.best2 <- as.matrix(data[mins==best.ix])
-      if(best.ix %in% mins) nonzero <- TRUE
+      data.best2 <- as.matrix(data[mins==best.model.ix])
+      if(best.model.ix %in% mins) nonzero <- TRUE
       it1 <- it1 + N
     }
     if(!nonzero)return(0)
     it <- 0
     while(length(data.best2) < N & it < 4){
-      data <- suppressMessages(GenerateDataMulti(n, models[[true.id]], parameters, N*3))
+      data <- suppressMessages(GenerateDataMulti(n, models[[true.model.id]], parameters, N*3))
       scores <- ICMultiMulti(models, data, ic)
       ics <- sapply(scores, function(x) sapply(x, function(y) y$ic))
       mins <- apply(ics,1,which.min)
-      data.best <- data[mins==best.ix]
+      data.best <- data[mins==best.model.ix]
       data.best2 <- c(data.best2, data.best)
       it <- it + 1
     }
