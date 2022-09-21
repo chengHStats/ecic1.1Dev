@@ -51,7 +51,7 @@ ECIC = function(models, data, alpha = c(0.01, 0.05, 0.1), N = 1000, ic = 'AIC', 
   } 
   else 
   {
-    n = length(data$nn) ## potential bug here since n is already set to length(data) before the if-else condition
+    # n = length(data$nn) ## potential bug here since n is already set to length(data) before the if-else condition
     params.obs = lapply(obs, function(x) x$parameters)
     scores.obs = sapply(obs, function(x) x$ic)
   }
@@ -69,7 +69,7 @@ ECIC = function(models, data, alpha = c(0.01, 0.05, 0.1), N = 1000, ic = 'AIC', 
   ratio.obs = weights.obs[best.ix]/max(weights.obs[-best.ix]) 
   # store the name of the best model (as selected by using the lowest IC value) as the name of dif.obs
   names(dif.obs) = best$ID
-
+  # apply the bias correction to the alternate model MLE's
   bc = lapply(alt.models, function(x)
     BiasCorrect(n, x, params.obs[[x$ID]],
                 models, N, ic, genBest))
