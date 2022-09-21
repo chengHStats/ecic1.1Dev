@@ -85,6 +85,7 @@ GenerateData.rwalk <- function(n, model, parameters){
 #' @export
 GenerateData.lmECIC <- function(n, model, parameters){
   k = length(parameters) - 1
+  # throw an error if the the standard deviation is not numeric, not of length 1, or <=0
   assert_that(is.numeric(parameters$sd),
               length(parameters$sd) == 1, parameters$sd > 0)
   if(k != model$k) {
@@ -93,6 +94,7 @@ GenerateData.lmECIC <- function(n, model, parameters){
   if(model$n != n){
     stop(paste("Incorrect n value, expecting n = ", model$n, ".", sep =""))
   }
+  # generate random data from the provided linear model
   fit = model$model.matrix %*% as.matrix(unlist(parameters[1:k]))
   fit + rnorm(n, 0, parameters$sd)
 }
@@ -305,46 +307,56 @@ GenerateDataMultiOld <- function(n, model, parameters, N){
 #' @examples
 #' GenerateData(25, "norm", c(mu = 0.3, sd = 1.2))
 #' @export
-GenerateDataBest <- function(n, true.model, parameters, best.model, models, N, ic = 'AIC', ...){
+GenerateDataBest <- function(n, true.model, parameters, best.model, models, N, ic = 'AIC', ...)
+{
   models = ecicModelList(models)
+  # identify the name of the best model
   best.model.id = best.model$ID
+  #identify the name of the the true model to generate data from
   true.model.id = true.model$ID
-  if (models[[1]]$data.type==1){
+  if (models[[1]]$data.type==1)
+  {
     check <- suppressMessages(GenerateData(n, models[[true.model.id]], parameters))
-
-  if(is.numeric(check)){
-    mins <- 0
-    best.model.ix <- which(names(models)==best.model.id)
-    it1 <- 0
-    nonzero <- FALSE
-    while(!(best.model.ix %in% mins) &  it1 < 1000){
-      data <- suppressMessages(GenerateDataMulti(n, models[[true.model.id]], parameters, N*3))
-      scores <- ICMultiMulti(models, data, ic)$ic
-      mins <- apply(scores,1,which.min)
-      data.best2 <- as.matrix(data[,mins==best.model.ix])
-      if(best.model.ix %in% mins) nonzero <- TRUE
-      it1 <- it1 + N
+    if(is.numeric(check))
+    {
+      mins <- 0
+      best.model.ix <- which(names(models)==best.model.id)
+      it1 <- 0
+      nonzero <- FALSE
+      while(!(best.model.ix %in% mins) &  it1 < 1000)
+      {
+        data <- suppressMessages(GenerateDataMulti(n, models[[true.model.id]], parameters, N*3))
+        scores <- ICMultiMulti(models, data, ic)$ic
+        mins <- apply(scores,1,which.min)
+        data.best2 <- as.matrix(data[,mins==best.model.ix])
+        if(best.model.ix %in% mins) nonzero <- TRUE
+        it1 <- it1 + N
+      }
+      if(!nonzero) 
+        return(NA)
+      it <- 0
+      while(dim(data.best2)[2] < N & it < 4)
+      {
+        data <- suppressMessages(GenerateDataMulti(n, models[[true.model.id]], parameters, N*3))
+        scores <- ICMultiMulti(models, data, ic)$ic
+        mins <- apply(scores,1,which.min)
+        data.best <- data[,mins==best.model.ix]
+        data.best2 <- cbind(data.best2, data.best)
+        it <- it + 1
+      }
+      if(dim(data.best2)[2] > N) out <- as.matrix(data.best2[,1:N])
+      if(dim(data.best2)[2] <= N) out <- as.matrix(data.best2)
+      return(out)
     }
-    if(!nonzero) return(NA)
-    it <- 0
-    while(dim(data.best2)[2] < N & it < 4){
-      data <- suppressMessages(GenerateDataMulti(n, models[[true.model.id]], parameters, N*3))
-      scores <- ICMultiMulti(models, data, ic)$ic
-      mins <- apply(scores,1,which.min)
-      data.best <- data[,mins==best.model.ix]
-      data.best2 <- cbind(data.best2, data.best)
-      it <- it + 1
-    }
-    if(dim(data.best2)[2] > N) out <- as.matrix(data.best2[,1:N])
-    if(dim(data.best2)[2] <= N) out <- as.matrix(data.best2)
-    return(out)}
   }
-  if (models[[1]]$data.type=="paleoTS"){
+  if (models[[1]]$data.type=="paleoTS")
+  {
     mins <- 0
     best.model.ix <- which(names(models)==best.model.id)
     it1 <- 0
     nonzero <- FALSE
-    while(!(best.model.ix %in% mins) &  it1 < 1000){
+    while(!(best.model.ix %in% mins) &  it1 < 1000)
+    {
       data <- suppressMessages(GenerateDataMulti(n, models[[true.model.id]], parameters, N*3))
       fits <- ICMultiMulti(models, data, ic)
       ics <- sapply(fits, function(x) sapply(x, function(y) y$ic))
@@ -353,9 +365,11 @@ GenerateDataBest <- function(n, true.model, parameters, best.model, models, N, i
       if(best.model.ix %in% mins) nonzero <- TRUE
       it1 <- it1 + N
     }
-    if(!nonzero)return(0)
+    if(!nonzero)
+      return(0)
     it <- 0
-    while(length(data.best2) < N & it < 4){
+    while(length(data.best2) < N & it < 4)
+    {
       data <- suppressMessages(GenerateDataMulti(n, models[[true.model.id]], parameters, N*3))
       scores <- ICMultiMulti(models, data, ic)
       ics <- sapply(scores, function(x) sapply(x, function(y) y$ic))
@@ -366,6 +380,7 @@ GenerateDataBest <- function(n, true.model, parameters, best.model, models, N, i
     }
     if(length(data.best2) > N) out <- data.best2[1:N]
     if(length(data.best2) <= N) out <- data.best2
-    return(out)}
+    return(out)
   }
+}
 
